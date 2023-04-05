@@ -23,7 +23,7 @@ def remove_music(title):
     music_df = music_df[music_df['title'] != title]
 
 # Function to search for music and display them in a playlist
-def search_music(filename=None, title=None, album=None, min_length=None, max_length=None, creator=None):
+def search_music(filename=None, title=None, album=None, min_length=None, max_length=None, creator=None, all=False):
     global music_df
     results = music_df
 
@@ -40,8 +40,17 @@ def search_music(filename=None, title=None, album=None, min_length=None, max_len
     if creator:
         results = results[results['creator'].str.contains(creator, case=False)]
     
-    if not results.empty:
-        return results.to_string(index=False)
+    if all:
+        if not results.empty:
+            return results.to_string(index=False)
+        else:
+            return None
+    else:
+        print("Search result:")
+        print(results.to_string(index=False))
+        print()
+    
+
 
 def search_all(target):
     global music_df
@@ -50,10 +59,10 @@ def search_all(target):
 
     results = []
 
-    results.append(search_music(filename=target))
-    results.append(search_music(title=target))
-    results.append(search_music(album=target))
-    results.append(search_music(creator=target))
+    results.append(search_music(filename=target, all=True))
+    results.append(search_music(title=target, all=True))
+    results.append(search_music(album=target, all=True))
+    results.append(search_music(creator=target, all=True))
 
     if len(results):
         for result in results:
@@ -90,10 +99,10 @@ load_from_csv('music.csv')
 # search_music(album='time')
 # search_music(title='Thriller')
 # search_music(creator='AC/DC')
-# search_music(min_length=300)
+search_music(min_length=300)
 
 # search_music(filename='music')
 
-search_all("song")
+search_all("in")
 
 save_to_csv('music.csv')
