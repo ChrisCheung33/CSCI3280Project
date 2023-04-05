@@ -40,11 +40,27 @@ def search_music(filename=None, title=None, album=None, min_length=None, max_len
     if creator:
         results = results[results['creator'].str.contains(creator, case=False)]
     
-    print("Playlist:")
-    if results.empty:
-        print("No search result")
+    if not results.empty:
+        return results.to_string(index=False)
+
+def search_all(target):
+    global music_df
+
+    print("Search result:")
+
+    results = []
+
+    results.append(search_music(filename=target))
+    results.append(search_music(title=target))
+    results.append(search_music(album=target))
+    results.append(search_music(creator=target))
+
+    if len(results):
+        for result in results:
+            if result:
+                print(result)
     else:
-        print(results.to_string(index=False))
+        print("No search result")
     print()
 
 # Function to save the music information to a CSV file
@@ -70,12 +86,14 @@ load_from_csv('music.csv')
 # add_music('song4.wav', 'The Dark Side of the Moon', 'Time', 421, 'Pink Floyd')
 # add_music('song5.wav', 'Purple Rain', 'When Doves Cry', 346, 'Prince')
 
-search_music(filename='song')
-search_music(album='time')
-search_music(title='Thriller')
-search_music(creator='AC/DC')
-search_music(min_length=300)
+# search_music(filename='song')
+# search_music(album='time')
+# search_music(title='Thriller')
+# search_music(creator='AC/DC')
+# search_music(min_length=300)
 
-search_music(filename='music')
+# search_music(filename='music')
+
+search_all("song")
 
 save_to_csv('music.csv')
