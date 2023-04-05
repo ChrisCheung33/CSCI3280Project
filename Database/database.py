@@ -42,13 +42,12 @@ def search_music(filename=None, title=None, album=None, min_length=None, max_len
     
     if all:
         if not results.empty:
-            return results.to_string(index=False)
-        else:
-            return None
-    else:
-        print("Search result:")
-        print(results.to_string(index=False))
-        print()
+            return results
+        return None
+
+    print("Search result:")
+    print(results.to_string(index=False))
+    print()
     
 
 
@@ -57,19 +56,25 @@ def search_all(target):
 
     print("Search result:")
 
-    results = []
+    filename_search_result = search_music(filename=target, all=True)
+    title_search_result = search_music(title=target, all=True)
+    album_search_result = search_music(album=target, all=True)
+    creator_search_result = search_music(creator=target, all=True)
 
-    results.append(search_music(filename=target, all=True))
-    results.append(search_music(title=target, all=True))
-    results.append(search_music(album=target, all=True))
-    results.append(search_music(creator=target, all=True))
+    results = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'creator'])
+
+    results = pd.concat([results, filename_search_result], ignore_index=True)
+    results = pd.concat([results, title_search_result], ignore_index=True)
+    results = pd.concat([results, album_search_result], ignore_index=True)
+    results = pd.concat([results, creator_search_result], ignore_index=True)
+
+    results = results.drop_duplicates(subset=['filename'], keep='first')
+    results = results.sort_values(by = 'filename')
 
     if len(results):
-        for result in results:
-            if result:
-                print(result)
+        print(results.to_string(index=False))
     else:
-        print("No search result")
+        print(f"No search result for \"{target}\".")
     print()
 
 # Function to save the music information to a CSV file
@@ -96,13 +101,34 @@ load_from_csv('music.csv')
 # add_music('song5.wav', 'Purple Rain', 'When Doves Cry', 346, 'Prince')
 
 # search_music(filename='song')
-# search_music(album='time')
 # search_music(title='Thriller')
+# search_music(album='time')
 # search_music(creator='AC/DC')
-search_music(min_length=300)
+# search_music(min_length=300)
 
 # search_music(filename='music')
+# search_all("in")
 
-search_all("in")
+while(1):
+    user_input = input("Choose action(A for add music, R for remove music, F for find music, S for Save and quit program): ")
+
+    if user_input == "A":
+        filename = input("Input filename: ")
+        title = input("Input title: ")
+        album = input("Input album: ")
+        length = input("Input length: ")
+        creator = input("Input creator: ")
+        add_music(filename, title, album, length, creator)
+    elif user_input == "R":
+        title = input("Input title to remove: ")
+        remove_music(title)
+    elif user_input == "F":
+        search_target = input("Input keyword: ")
+        search_all(search_target)
+    elif user_input == "S":
+        break
+    else:
+        print("Invalid input, please input again.")
 
 save_to_csv('music.csv')
+print("Saved.")
