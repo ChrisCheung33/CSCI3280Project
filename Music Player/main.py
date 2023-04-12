@@ -31,7 +31,7 @@ def select():
     # Mac/linux
     mixer.music.load(rootpath + listBox.get("anchor"))
     # mixer.music.play()
-    play(rootpath + listBox.get("anchor"))
+    playmusic(rootpath + listBox.get("anchor"))
 #action for the stop button: to clear a song when it is activated
 def stop():
     mixer.music.stop()
@@ -76,32 +76,51 @@ def pause_song():
         mixer.music.unpause()
         pauseButton["text"] == "Pause"
 
-def play(filename):
-    print("Now Playing Music:",filename)
-    # Open the wav file
-    with open(filename, 'rb') as f:
-        # Read the RIFF header
-        riff_header = f.read(12)
-        # Read the fmt subchunk
-        fmt_header = f.read(8)
-        fmt_size = struct.unpack('<I', fmt_header[4:8])[0]
-        fmt_data = f.read(fmt_size)
-        # Get the sample rate and number of channels
-        sample_rate, n_channels = struct.unpack('<2I', fmt_data[4:12])
-        # Read the data subchunk
-        data_header = f.read(8)
-        data_size = struct.unpack('<I', data_header[4:8])[0]
-        data = f.read(data_size)
-    # Convert data to numpy array
-    np_data = np.frombuffer(data, dtype=np.int16)
-    # Normalize data
-    np_data = np_data / np.iinfo(np.int16).max
-    print(np_data)
-    # Set n_channels to 2 (stereo)
-    n_channels = 2
-    # Play the audio using simpleaudio's play_buffer function
-    play_obj = sa.play_buffer(np_data, n_channels, 2, sample_rate)
-    # play_obj.wait_done()
+def playmusic(file_path):
+    with open(file_path, 'rb') as wave_file:
+        # Check that the file is a WAV file
+        riff_chunk_id = wave_file.read(4)
+        riff_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+        riff_format = wave_file.read(4)
+        if riff_chunk_id != b'RIFF' or riff_format != b'WAVE':
+            raise ValueError('File is not a WAV file.')
+
+        # Read the header information
+        fmt_chunk_id = wave_file.read(4)
+        fmt_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+        audio_format = struct.unpack('<H', wave_file.read(2))[0]
+        num_channels = struct.unpack('<H', wave_file.read(2))[0]
+        sample_rate = struct.unpack('<I', wave_file.read(4))[0]
+        byte_rate = struct.unpack('<I', wave_file.read(4))[0]
+        block_align = struct.unpack('<H', wave_file.read(2))[0]
+        bits_per_sample = struct.unpack('<H', wave_file.read(2))[0]
+
+        # Verify that the audio format is PCM
+        if audio_format != 1:
+            raise ValueError('File is not in PCM format.')
+
+        # Read the data chunk
+        data_chunk_id = wave_file.read(4)
+        data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+        raw_data = wave_file.read(data_chunk_size)
+
+    # Convert raw byte data to NumPy array with proper data type
+    if bits_per_sample == 16:
+        data_type = np.int16
+    elif bits_per_sample == 8:
+        data_type = np.int8
+    else:
+        raise ValueError('File has unsupported bit depth.')
+    audio_array = np.frombuffer(raw_data, dtype=data_type)
+
+    # Reshape the array for stereo audio
+    if num_channels == 2:
+        audio_array = audio_array.reshape(-1, 2)
+
+    play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
+
+    
+
 
 listBox = tk.Listbox(canvas, fg = "cyan", bg = "white", width = 100, font = ('poppins',14))
 listBox.pack(padx = 15, pady = 15)
