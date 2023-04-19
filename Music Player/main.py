@@ -2,52 +2,46 @@ import tkinter as tk
 import fnmatch
 import struct
 import os
-from pygame import mixer
 import numpy as np
+# import simpleaudio as sa
 import simpleaudio as sa
 
 #design of the UI of the music player
 canvas = tk.Tk()
 canvas.title("Music Player")
-canvas.geometry("600x800")
+canvas.geometry("800x800")
 canvas.config(bg = 'white')
 
 #file for music
 rootpath = "./music/"#path for the music play list
 pattern = "*.wav"
 
-mixer.init()
 prev_image = tk.PhotoImage(file = "prev.png")
 stop_image = tk.PhotoImage(file = "stop.png")
 play_image = tk.PhotoImage(file = "play.png")
 pause_image = tk.PhotoImage(file = "pause.png")
 next_image = tk.PhotoImage(file = "next.png")
 
+play_obj = None
+
 #action for the play button: to select a song to be play
 def select():
     label.config(text = listBox.get("anchor"))
-    # Window
-    # mixer.music.load(rootpath + "//" +listBox.get("anchor")
-    # Mac/linux
-    mixer.music.load(rootpath + listBox.get("anchor"))
-    # mixer.music.play()
     playmusic(rootpath + listBox.get("anchor"))
+    
 #action for the stop button: to clear a song when it is activated
 def stop():
-    mixer.music.stop()
+    play_obj.stop()
     listBox.select_clear('active') 
+
 #action for the next button: to select the next song, by adding 1 to the current playing song
 def play_next():
     next_song = listBox.curselection()
     next_song = next_song[0] + 1
     next_song_name = listBox.get(next_song)
     label.config(text = next_song_name)
-    # Window
-    # mixer.music.load(rootpath + "\\" + next_song_name)
-    # Mac/linux
-    mixer.music.load(rootpath + next_song_name)
-    # mixer.music.play()
-    mixer.music.play()
+    play_obj.stop()
+    playmusic(rootpath + next_song_name)
     listBox.select_clear(0, 'end')
     listBox.activate(next_song)
     listBox.select_set(next_song)
@@ -57,23 +51,18 @@ def play_prev():
     next_song = next_song[0] - 1
     next_song_name = listBox.get(next_song)
     label.config(text = next_song_name)
-
-    # Window
-    # mixer.music.load(rootpath + "\\" + next_song_name)
-    # Mac/linux
-    mixer.music.load(rootpath + next_song_name)
-
-    mixer.music.play()
+    play_obj.stop()
+    playmusic(rootpath + next_song_name)
     listBox.select_clear(0, 'end')
     listBox.activate(next_song)
     listBox.select_set(next_song)
 #action for the pause button: to pause the song when it is playing and unpuase it  when it is paused
 def pause_song():
     if pauseButton["text"] == "Pause":
-        mixer.music.pause()
+        play_obj.pause()
         pauseButton["text"] == "Play"
     else:
-        mixer.music.unpause()
+        play_obj.resume()
         pauseButton["text"] == "Pause"
 
 def playmusic(file_path):
@@ -117,6 +106,7 @@ def playmusic(file_path):
     if num_channels == 2:
         audio_array = audio_array.reshape(-1, 2)
 
+    global play_obj
     play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
 
     
@@ -144,7 +134,7 @@ playButton = tk.Button(canvas, text = 'Play', image = play_image, bg = 'black', 
 playButton.pack(pady = 15, in_ = top, side = 'left')
 
 #Button for pause song
-pauseButton = tk.Button(canvas, text = 'Pause', image = stop_image, bg = 'black', borderwidth = 0, command = pause_song)
+pauseButton = tk.Button(canvas, text = 'Pause', image = pause_image, bg = 'black', borderwidth = 0, command = pause_song)
 pauseButton.pack(pady = 15, in_ = top, side = 'left')
 
 #Button for next song
