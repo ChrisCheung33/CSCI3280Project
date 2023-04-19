@@ -47,7 +47,7 @@ def play_next():
     # Mac/linux
     mixer.music.load(rootpath + next_song_name)
     # mixer.music.play()
-    play()
+    mixer.music.play()
     listBox.select_clear(0, 'end')
     listBox.activate(next_song)
     listBox.select_set(next_song)
