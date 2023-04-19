@@ -3,7 +3,6 @@ import fnmatch
 import struct
 import os
 import numpy as np
-# import simpleaudio as sa
 import simpleaudio as sa
 
 #design of the UI of the music player
