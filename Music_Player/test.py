@@ -1,7 +1,7 @@
 import mutagen
 import os
 
-file_path = '/Users/chris/CSCI3280/Project/CSCI3280Project/Music_Player/music/numb.wav'
+file_path = './music/heartache.wav'
 
 audio = mutagen.File(file_path)
 
