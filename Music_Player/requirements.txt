@@ -1,0 +1,5 @@
+complexaudio==1.0.4
+mutagen==1.46.0
+numpy==1.24.2
+pandas==2.0.0
+soundfile==0.12.1
