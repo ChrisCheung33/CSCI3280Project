@@ -4,6 +4,7 @@ from mutagen.wave import WAVE
 import soundfile as sf
 import os
 import struct
+import tkinter as tk
 
 # file_path = './music/ZenZenZense.wav'
 # file_path = './music/heartache.wav'
@@ -70,3 +71,33 @@ audio = WAVE(file_path)
 # # get lyrics from the audio file
 lyrics = audio.tags['TXXX:LYRICS']
 print(lyrics)
+
+
+from PIL import ImageTk, Image
+# get album art from the audio file
+album_art = audio.tags['APIC:']
+album_art_data = album_art.data
+album_art_format = album_art.mime.split('/')[1]
+print(album_art_format)
+# print(album_art[0:10])
+# album_art = album_art.decode('utf-8')
+
+# show the album art in a window
+root = tk.Tk()
+root.title("Album Art")
+root.geometry("800x800")
+root.resizable(False, False)
+# img = tk.BitmapImage(data=album_art)
+img = ImageTk.PhotoImage(data=album_art_data, format=album_art_format)
+# image = Image.open("test.jpeg")
+# print(image)
+# img = ImageTk.PhotoImage(image)
+
+# resize the image to fixed size 300x300
+# img = img.resize((300, 300), Image.ANTIALIAS)
+
+panel = tk.Label(root, image = img)
+
+panel.pack(side = "bottom", fill = "both", expand = "yes")
+
+root.mainloop()
