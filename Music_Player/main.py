@@ -6,7 +6,7 @@ import os
 import numpy as np
 import simpleaudio as sa
 import database
-import sounddevice as sd
+import soundfile as sf
 
 #design of the UI of the music player
 canvas = tk.Tk()
@@ -106,18 +106,23 @@ def playmusic(file_path):
     elif bits_per_sample == 8:
         data_type = np.int8
     elif bits_per_sample == 24:
-        data_type = np.int32
+        data, sample_rate = sf.read(file_path)
+        sf.write(file_path, data, sample_rate, subtype='PCM_16')
+        playmusic(file_path)
+        return
     else:
         raise ValueError('File has unsupported bit depth.')
+    
     audio_array = np.frombuffer(raw_data, dtype=data_type)
+        
 
     # Reshape the array for stereo audio
     if num_channels == 2:
         audio_array = audio_array.reshape(-1, 2)
 
     global play_obj
-    # play_obj = sa.play_buffer(audio_array, num_channels, bytes_per_sample, sample_rate)
-    play_obj = sd.play(audio_array, sample_rate)
+    play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
+    # play_obj = sd.play(audio_array, sample_rate)
 
 def add_song():
     database.load_from_csv(database.database_path)
