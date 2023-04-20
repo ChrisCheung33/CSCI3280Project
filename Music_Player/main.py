@@ -132,7 +132,9 @@ def add_song():
     # remove the music/ part of the path
     destination_file = destination_file[6:]
     database.save_to_csv(database.database_path)
-    listBox.insert('end', destination_file)
+    # listBox.insert('end', destination_file)
+    listBox.delete('0','end')
+    read_file(rootpath, pattern)
 
 # save a .wav file to the music folder
 def save_wav(file_path):
