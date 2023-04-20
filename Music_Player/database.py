@@ -1,7 +1,8 @@
 import pandas as pd
 import os
 from tkinter.filedialog import askopenfilename
-import mutagen
+import soundfile as sf
+from mutagen.wave import WAVE
 
 # Create an empty DataFrame to store music information
 music_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist'])
@@ -100,12 +101,14 @@ def upload_wav():
     global music_df
     file_path = askopenfilename()
     # print(filename)
-    audio = mutagen.File(file_path)
-    filename = os.path.basename(file_path)
-    title = audio.tags['TIT2']
-    album = audio.tags['TALB']
-    length = audio.info.length
-    artist = audio.tags['TPE1']
+    audio = sf.SoundFile(file_path)
+
+    filename = os.path.basename(file_path) 
+    artist = audio.__getattr__('artist')
+    title = audio.__getattr__('title')
+    album = audio.__getattr__('album')
+    length = audio.frames / audio.samplerate
+
     add_music(filename, title, album, length, artist)
     return file_path
 
@@ -116,6 +119,14 @@ def get_format_length(length):
     if seconds < 10:
         return f"{minutes}:0{seconds}"
     return f"{minutes}:{seconds}"
+
+def get_lyrics(filename):
+    try:
+        audio = WAVE(filename)
+        lyrics = audio.tags['TXXX:LYRICS']
+    except:
+        lyrics = "No lyrics found."
+    return lyrics
 
 # Example usage
 

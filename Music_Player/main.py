@@ -32,6 +32,7 @@ def select():
     sa.stop_all()
     label.config(text = listBox.get("anchor"))
     playmusic(rootpath + listBox.get("anchor"))
+    show_lyrics(rootpath + listBox.get("anchor"))
     
 #action for the stop button: to clear a song when it is activated
 def stop():
@@ -88,7 +89,6 @@ def playmusic(file_path):
         byte_rate = struct.unpack('<I', wave_file.read(4))[0]
         block_align = struct.unpack('<H', wave_file.read(2))[0]
         bits_per_sample = struct.unpack('<H', wave_file.read(2))[0]
-        print("bits per sample: " + str(bits_per_sample))
 
         # Verify that the audio format is PCM
         if audio_format != 1:
@@ -156,6 +156,9 @@ listBox.pack(padx = 15, pady = 15)
 label = tk.Label(canvas, text = '', bg = 'black', fg = 'yellow', font = ('poppins',14))
 label.pack(pady = 15)
 
+lyricsText = tk.Text(canvas, bg = 'black', fg = 'yellow', font = ('poppins',14), width = 100, height = 10)
+lyricsText.pack(padx = 15, pady = 15)
+
 top = tk.Frame(canvas, bg = "black")
 top.pack(padx = 15, pady = 15, anchor = 'center')
 
@@ -198,14 +201,11 @@ def read_file(rootpath, pattern):
 read_file(rootpath, pattern)
 
 # show lyrics of the song in the text box
-def show_lyrics():
-    # get the selected song
-    song = listBox.get(listBox.curselection())
-    # remove the .wav part of the song
-    song = song[:-4]
+def show_lyrics(song):
     # get the lyrics of the song
     lyrics = database.get_lyrics(song)
     # show the lyrics in the text box
-    label["text"] = lyrics
+    lyricsText.delete('1.0', 'end')
+    lyricsText.insert('1.0', lyrics)
 
 canvas.mainloop()
