@@ -13,7 +13,7 @@
     pip install -r requirements.txt 
     ```
 
-- run the project in local
+- run the project
     ```bash
     python main.py
     ```
