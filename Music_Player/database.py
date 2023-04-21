@@ -151,6 +151,12 @@ def get_album_art(filename):
         album_art = None
     return album_art
 
+# get filename from title
+def get_filename(title):
+    global music_df
+    filename = music_df[music_df['title'] == title]['filename'].values[0]
+    return filename
+
 # Example usage
 
 # load_from_csv(database_path)

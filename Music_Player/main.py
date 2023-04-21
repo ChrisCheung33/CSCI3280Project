@@ -1,5 +1,6 @@
 import shutil
 import tkinter as tk
+import tkinter.ttk as ttk
 import fnmatch
 import struct
 import os
@@ -34,39 +35,47 @@ play_obj = None
 #action for the play button: to select a song to be play
 def select():
     sa.stop_all()
-    label.config(text = listBox.get("anchor"))
-    playmusic(rootpath + listBox.get("anchor"))
-    show_lyrics(rootpath + listBox.get("anchor"))
-    show_art(rootpath + listBox.get("anchor"))
+
+    # get the selected song from the treeview
+    selected_song = tree.focus()
+    selected_song_name = tree.item(selected_song)['values'][0]
+    selected_song_path = database.get_filename(selected_song_name)
+    
+    label.config(text = "Now playing: " + selected_song_name)
+    playmusic(rootpath + selected_song_path)
+    show_lyrics(rootpath + selected_song_path)
+    show_art(rootpath + selected_song_path)
+
     
 #action for the stop button: to clear a song when it is activated
 def stop():
     # play_obj.stop()
     sa.stop_all()
-    listBox.select_clear('active') 
+    # listBox.select_clear('active') 
 
 #action for the next button: to select the next song, by adding 1 to the current playing song
 def play_next():
-    next_song = listBox.curselection()
+    # next_song = listBox.curselection()
     next_song = next_song[0] + 1
-    next_song_name = listBox.get(next_song)
-    label.config(text = next_song_name)
+    # next_song_name = listBox.get(next_song)
+    # label.config(text = next_song_name)
     play_obj.stop()
-    playmusic(rootpath + next_song_name)
-    listBox.select_clear(0, 'end')
-    listBox.activate(next_song)
-    listBox.select_set(next_song)
+    # playmusic(rootpath + next_song_name)
+    # listBox.select_clear(0, 'end')
+    # listBox.activate(next_song)
+    # listBox.select_set(next_song)
 #action for the prev button: to select the previous song, by minus 1 to the current playing song
 def play_prev():
-    next_song = listBox.curselection()
-    next_song = next_song[0] - 1
-    next_song_name = listBox.get(next_song)
-    label.config(text = next_song_name)
+    # next_song = listBox.curselection()
+    # next_song = next_song[0] - 1
+    # next_song_name = listBox.get(next_song)
+    # label.config(text = next_song_name)
     play_obj.stop()
-    playmusic(rootpath + next_song_name)
-    listBox.select_clear(0, 'end')
-    listBox.activate(next_song)
-    listBox.select_set(next_song)
+    # playmusic(rootpath + next_song_name)
+    # listBox.select_clear(0, 'end')
+    # listBox.activate(next_song)
+    # listBox.select_set(next_song)
+
 #action for the pause button: to pause the song when it is playing and unpuase it  when it is paused
 def pause_song():
     if pauseButton["text"] == "Pause":
@@ -148,9 +157,8 @@ def add_song():
     # remove the music/ part of the path
     destination_file = destination_file[6:]
     database.save_to_csv(database.database_path)
-    # listBox.insert('end', destination_file)
-    listBox.delete('0','end')
-    read_file(rootpath, pattern)
+    # listBox.delete('0','end')
+    read_file_to_treeview(rootpath, pattern)
 
 # save a .wav file to the music folder
 def save_wav(file_path):
@@ -168,8 +176,15 @@ def save_wav(file_path):
     shutil.copy2(source_file, destination_file)
     return destination_file
 
-listBox = tk.Listbox(canvas, fg = "cyan", bg = "white", width = 100, font = ('poppins',14))
-listBox.pack(padx = 15, pady = 15)
+# listBox = tk.Listbox(canvas, fg = "cyan", bg = "white", width = 100, font = ('poppins',14))
+# listBox.pack(padx = 15, pady = 15)
+
+tree = ttk.Treeview(canvas, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
+tree.heading("Name", text = "Name")
+tree.heading("Artist", text = "Artist")
+tree.heading("Album", text = "Album")
+tree.heading("Time", text = "Time")
+tree.pack(padx = 15, pady = 15)
 
 music_info = tk.Frame(canvas, bg = "black")
 music_info.pack(padx = 15, pady = 15, anchor = 'center')
@@ -216,18 +231,40 @@ addButton = tk.Button(canvas, text = 'Add', image = add_image, bg = 'black', bor
 addButton.pack(pady = 15, in_ = top, side = 'left')
 
 #read the file
-def read_file(rootpath, pattern):
+# def read_file(rootpath, pattern):
+#     filename_list = []
+#     for root, dirs, files in os.walk(rootpath):
+#         for filename in fnmatch.filter(files, pattern):
+#             filename_list.append(filename)
+
+#     filename_list.sort()
+#     for filename in filename_list:
+#         listBox.insert('end', filename)
+
+def read_file_to_treeview(rootpath, pattern):
     filename_list = []
     for root, dirs, files in os.walk(rootpath):
         for filename in fnmatch.filter(files, pattern):
-            filename_list.append(filename)
+            filename_list.append(os.path.basename(filename))
 
     filename_list.sort()
+    print(filename_list)
     for filename in filename_list:
-        listBox.insert('end', filename)
+        # get the name of the song
+        name = database.music_df.loc[database.music_df['filename'] == filename, 'title'].values[0]
+        # get the artist of the song
+        artist = database.music_df.loc[database.music_df['filename'] == filename, 'artist'].values[0]
+        # get the album of the song
+        album = database.music_df.loc[database.music_df['filename'] == filename, 'album'].values[0]
+        # get the time of the song
+        time = database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0]
+        # insert the song in the treeview
+        tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
 
 
-read_file(rootpath, pattern)
+# read_file(rootpath, pattern)
+
+
 
 # show lyrics of the song in the text box
 def show_lyrics(song):
@@ -262,5 +299,6 @@ def show_art(file_path):
         panel.image = img
 
 database.load_from_csv(database.database_path)
+read_file_to_treeview(rootpath, pattern)
 
 canvas.mainloop()
