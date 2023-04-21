@@ -1,13 +1,13 @@
-import mutagen
+# import mutagen
 
-from mutagen.wave import WAVE
-import soundfile as sf
-import os
-import struct
-import tkinter as tk
-from io import BytesIO
-import database
-import ast
+# from mutagen.wave import WAVE
+# import soundfile as sf
+# import os
+# import struct
+# import tkinter as tk
+# from io import BytesIO
+# import database
+# import ast
 
 # file_path = './music/ZenZenZense.wav'
 # file_path = './music/heartache.wav'
@@ -113,7 +113,33 @@ import ast
 
 # root.mainloop()
 
-string_data = "b'\\xff\\xd8\\xff'"
-byte_data = ast.literal_eval(string_data)
-print(byte_data)
-print(type(byte_data))
+# string_data = "b'\\xff\\xd8\\xff'"
+# byte_data = ast.literal_eval(string_data)
+# print(byte_data)
+# print(type(byte_data))
+
+import tkinter as tk
+from tkinter import ttk
+
+root = tk.Tk()
+
+tree = ttk.Treeview(root)
+tree.pack()
+
+for i in range(10):
+    tree.insert("", "end", text=f"Item {i}")
+
+def focus_next_row():
+    selected_item = tree.selection()
+    if selected_item:
+        next_item = tree.index(selected_item[0]) + 1
+        if next_item < len(tree.get_children()):
+            tree.focus(tree.get_children()[next_item])
+            tree.selection_set(tree.get_children()[next_item])
+
+tree.bind("<Down>", focus_next_row)
+
+button = tk.Button(root, text="Focus next row", command=focus_next_row)
+button.pack()
+
+root.mainloop()

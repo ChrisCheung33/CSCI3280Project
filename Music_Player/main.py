@@ -41,40 +41,55 @@ def select():
     selected_song_name = tree.item(selected_song)['values'][0]
     selected_song_path = database.get_filename(selected_song_name)
     
-    label.config(text = "Now playing: " + selected_song_name)
     playmusic(rootpath + selected_song_path)
-    show_lyrics(rootpath + selected_song_path)
-    show_art(rootpath + selected_song_path)
 
     
 #action for the stop button: to clear a song when it is activated
 def stop():
-    # play_obj.stop()
     sa.stop_all()
-    # listBox.select_clear('active') 
+    label.config(text = "Choose a song to play")
+    show_art("")
+    tree.selection_remove(tree.focus())
+    canvas.focus()
 
 #action for the next button: to select the next song, by adding 1 to the current playing song
 def play_next():
-    # next_song = listBox.curselection()
-    next_song = next_song[0] + 1
-    # next_song_name = listBox.get(next_song)
-    # label.config(text = next_song_name)
+    selected_item = tree.selection()
+    if selected_item:
+        next_item = tree.index(selected_item[0]) + 1
+        if next_item < len(tree.get_children()):
+            tree.focus(tree.get_children()[next_item])
+            tree.selection_set(tree.get_children()[next_item])
+        else:
+            tree.focus(tree.get_children()[0])
+            tree.selection_set(tree.get_children()[0])
+
+    selected_song = tree.focus()
+    selected_song_name = tree.item(selected_song)['values'][0]
+    selected_song_path = database.get_filename(selected_song_name)
+
     play_obj.stop()
-    # playmusic(rootpath + next_song_name)
-    # listBox.select_clear(0, 'end')
-    # listBox.activate(next_song)
-    # listBox.select_set(next_song)
+    playmusic(rootpath + selected_song_path)
+
+
 #action for the prev button: to select the previous song, by minus 1 to the current playing song
 def play_prev():
-    # next_song = listBox.curselection()
-    # next_song = next_song[0] - 1
-    # next_song_name = listBox.get(next_song)
-    # label.config(text = next_song_name)
+    selected_item = tree.selection()
+    if selected_item:
+        next_item = tree.index(selected_item[0]) - 1
+        if next_item >= 0:
+            tree.focus(tree.get_children()[next_item])
+            tree.selection_set(tree.get_children()[next_item])
+        else:
+            tree.focus(tree.get_children()[-1])
+            tree.selection_set(tree.get_children()[-1])
+
+    selected_song = tree.focus()
+    selected_song_name = tree.item(selected_song)['values'][0]
+    selected_song_path = database.get_filename(selected_song_name)
+
     play_obj.stop()
-    # playmusic(rootpath + next_song_name)
-    # listBox.select_clear(0, 'end')
-    # listBox.activate(next_song)
-    # listBox.select_set(next_song)
+    playmusic(rootpath + selected_song_path)
 
 #action for the pause button: to pause the song when it is playing and unpuase it  when it is paused
 def pause_song():
@@ -127,12 +142,6 @@ def playmusic(file_path):
         print(keys)
         sf.write(file_path, data, sample_rate, subtype='PCM_16')
 
-        # with sf.SoundFile(file_path, 'w', sample_rate, audio.channels) as f:
-        #     for key in keys:
-        #         if key != "date":
-        #             f.__setattr__(key, str(audio.__getattr__(key)))
-
-            # print("file path: " + file_path)
         playmusic(file_path)
         return
     else:
@@ -147,7 +156,11 @@ def playmusic(file_path):
 
     global play_obj
     play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
-    # play_obj = sd.play(audio_array, sample_rate)
+    filename = os.path.basename(file_path)
+    label.config(text = "Now playing: " + database.get_title(filename))
+    show_lyrics(file_path)
+    show_art(file_path)
+
 
 def add_song():
     database.load_from_csv(database.database_path)
@@ -176,9 +189,6 @@ def save_wav(file_path):
     shutil.copy2(source_file, destination_file)
     return destination_file
 
-# listBox = tk.Listbox(canvas, fg = "cyan", bg = "white", width = 100, font = ('poppins',14))
-# listBox.pack(padx = 15, pady = 15)
-
 tree = ttk.Treeview(canvas, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
 tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
@@ -189,7 +199,7 @@ tree.pack(padx = 15, pady = 15)
 music_info = tk.Frame(canvas, bg = "black")
 music_info.pack(padx = 15, pady = 15, anchor = 'center')
 
-label = tk.Label(canvas, text = '', bg = 'black', fg = 'yellow', font = ('poppins',14))
+label = tk.Label(canvas, text = 'Choose a song to play', bg = 'black', fg = 'yellow', font = ('poppins',14))
 label.pack(pady = 15, side='left', in_ = music_info)
 
 TARGET_SIZE = (128, 128)
@@ -230,17 +240,6 @@ nextButton.pack(pady = 15, in_ = top, side = 'left')
 addButton = tk.Button(canvas, text = 'Add', image = add_image, bg = 'black', borderwidth = 0, command = add_song)
 addButton.pack(pady = 15, in_ = top, side = 'left')
 
-#read the file
-# def read_file(rootpath, pattern):
-#     filename_list = []
-#     for root, dirs, files in os.walk(rootpath):
-#         for filename in fnmatch.filter(files, pattern):
-#             filename_list.append(filename)
-
-#     filename_list.sort()
-#     for filename in filename_list:
-#         listBox.insert('end', filename)
-
 def read_file_to_treeview(rootpath, pattern):
     filename_list = []
     for root, dirs, files in os.walk(rootpath):
@@ -262,9 +261,6 @@ def read_file_to_treeview(rootpath, pattern):
         tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
 
 
-# read_file(rootpath, pattern)
-
-
 
 # show lyrics of the song in the text box
 def show_lyrics(song):
@@ -273,26 +269,24 @@ def show_lyrics(song):
     print(song)
     # get the lyrics of the song
     lyrics = database.music_df.loc[database.music_df['filename'] == song, 'lyrics'].values[0]
-    # lyrics = lyrics.to_string(index=False)
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
 
 def show_art(file_path):
         # get filename without the extension
+
         song = os.path.basename(file_path)
-        print(file_path)
-        album_art_data = database.music_df.loc[database.music_df['filename'] == song, 'album_art'].values[0]
+        try:
+            album_art_data = database.music_df.loc[database.music_df['filename'] == song, 'album_art'].values[0]
+        except:
+            album_art_data = None
+             
         if album_art_data is None:
-            print("No album art found")
             loaded_img = Image.open("./images/art.jpeg")
         else:
             loaded_img = Image.open(BytesIO(ast.literal_eval(album_art_data)))
-        # album_art_data = album_art.data
-        # album_art_format = album_art.mime.split('/')[1]
 
-        # loaded_img = Image.open(BytesIO(album_art_data))
-        # loaded_img = Image.open("./images/art.jpeg")
         resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
         img = ImageTk.PhotoImage(resized_img)
         panel.config(image = img)
