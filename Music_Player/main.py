@@ -207,7 +207,7 @@ TARGET_SIZE = (128, 128)
 loaded_img = Image.open("./images/art.jpeg")
 resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
-panel = tk.Label(music_info, image = img)
+panel = tk.Label(music_info, image = img, bg='black')
 panel.image = img
 panel.pack(side = "left", fill = "both", expand = "yes")
 
@@ -283,7 +283,7 @@ def show_art(file_path):
         except:
             album_art_data = None
 
-        if album_art_data is None:
+        if album_art_data is None or album_art_data == "null" or type(album_art_data) != str:
             loaded_img = Image.open("./images/art.jpeg")
         else:
             loaded_img = Image.open(BytesIO(ast.literal_eval(album_art_data)))

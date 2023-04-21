@@ -17,8 +17,11 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         print(f"A song with the title '{title}' already exists in the database.")
     else:
         if lyrics == None:
-            print("No lyrics found.")
             lyrics = "No lyrics found."
+
+        if album_art == None:
+            album_art = "null"
+        print(album_art)
 
         music_info_row = {'filename': filename,
                           'album': album,
@@ -32,11 +35,13 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         list_of_music_info.append(music_info_row)
 
         music_df = pd.DataFrame.from_records(list_of_music_info)
+        save_to_csv(database_path)
 
 # Function to remove a music from the DataFrame
 def remove_music(title):
     global music_df
     music_df = music_df[music_df['title'] != title]
+    save_to_csv(database_path)
 
 # Function to search for music and display them in a playlist
 def search_music(filename=None, title=None, album=None, min_length=None, max_length=None, artist=None, all=False):
