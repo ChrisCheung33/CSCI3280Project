@@ -170,7 +170,8 @@ def add_song():
     # remove the music/ part of the path
     destination_file = destination_file[6:]
     database.save_to_csv(database.database_path)
-    # listBox.delete('0','end')
+    for row in tree.get_children():
+        tree.delete(row)
     read_file_to_treeview(rootpath, pattern)
 
 # save a .wav file to the music folder
@@ -199,19 +200,19 @@ tree.pack(padx = 15, pady = 15)
 music_info = tk.Frame(canvas, bg = "black")
 music_info.pack(padx = 15, pady = 15, anchor = 'center')
 
-label = tk.Label(canvas, text = 'Choose a song to play', bg = 'black', fg = 'yellow', font = ('poppins',14))
-label.pack(pady = 15, side='left', in_ = music_info)
+label = tk.Label(music_info, text = 'Choose a song to play', bg = 'black', fg = 'yellow', font = ('poppins',14))
+label.pack(pady = 15, side='top')
 
 TARGET_SIZE = (128, 128)
 loaded_img = Image.open("./images/art.jpeg")
 resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
-panel = tk.Label(canvas, image = img)
+panel = tk.Label(music_info, image = img)
 panel.image = img
-panel.pack(side = "left", in_ = music_info, fill = "both", expand = "yes")
+panel.pack(side = "left", fill = "both", expand = "yes")
 
-lyricsText = tk.Text(canvas, bg = 'black', fg = 'yellow', font = ('poppins',14), width = 100, height = 10)
-lyricsText.pack(padx = 15, pady = 15)
+lyricsText = tk.Text(music_info, bg = 'black', fg = 'yellow', font = ('poppins',14), width = 100, height = 10)
+lyricsText.pack(padx = 15, pady = 15, side = 'right')
 
 top = tk.Frame(canvas, bg = "black")
 top.pack(padx = 15, pady = 15, anchor = 'center')
@@ -281,7 +282,7 @@ def show_art(file_path):
             album_art_data = database.music_df.loc[database.music_df['filename'] == song, 'album_art'].values[0]
         except:
             album_art_data = None
-             
+
         if album_art_data is None:
             loaded_img = Image.open("./images/art.jpeg")
         else:
