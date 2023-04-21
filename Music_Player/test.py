@@ -5,6 +5,8 @@ import soundfile as sf
 import os
 import struct
 import tkinter as tk
+from io import BytesIO
+import database
 
 # file_path = './music/ZenZenZense.wav'
 # file_path = './music/heartache.wav'
@@ -75,10 +77,11 @@ print(lyrics)
 
 from PIL import ImageTk, Image
 # get album art from the audio file
-album_art = audio.tags['APIC:']
+# album_art = audio.tags['APIC:']
+album_art = database.get_album_art(file_path)
 album_art_data = album_art.data
-album_art_format = album_art.mime.split('/')[1]
-print(album_art_format)
+# album_art_format = album_art.mime.split('/')[1]
+# print(album_art_format)
 # print(album_art[0:10])
 # album_art = album_art.decode('utf-8')
 
@@ -86,18 +89,22 @@ print(album_art_format)
 root = tk.Tk()
 root.title("Album Art")
 root.geometry("800x800")
-root.resizable(False, False)
+root.resizable(True, True)
 # img = tk.BitmapImage(data=album_art)
-img = ImageTk.PhotoImage(data=album_art_data, format=album_art_format)
-# image = Image.open("test.jpeg")
-# print(image)
-# img = ImageTk.PhotoImage(image)
+# img = ImageTk.PhotoImage(data=album_art_data, format=album_art_format)
 
-# resize the image to fixed size 300x300
-# img = img.resize((300, 300), Image.ANTIALIAS)
+music_info = tk.Frame(root, bg = "black")
+music_info.pack(padx = 15, pady = 15, anchor = 'center')
+
+# resize the image to fixed size (256, 256)
+TARGET_SIZE = (128, 128)
+loaded_img = Image.open(BytesIO(album_art_data))
+print(loaded_img)
+resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+img = ImageTk.PhotoImage(resized_img)
 
 panel = tk.Label(root, image = img)
 
-panel.pack(side = "bottom", fill = "both", expand = "yes")
+panel.pack(side = "bottom", fill = "both", expand = "yes", in_ = music_info)
 
 root.mainloop()

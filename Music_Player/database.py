@@ -128,6 +128,14 @@ def get_lyrics(filename):
         lyrics = "No lyrics found."
     return lyrics
 
+def get_album_art(filename):
+    try:
+        audio = WAVE(filename)
+        album_art = audio.tags['APIC:']
+    except:
+        album_art = None
+    return album_art
+
 # Example usage
 
 # load_from_csv(database_path)

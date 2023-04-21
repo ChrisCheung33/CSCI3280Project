@@ -7,23 +7,26 @@ import numpy as np
 import simpleaudio as sa
 import database
 import soundfile as sf
+from io import BytesIO
+from PIL import ImageTk, Image
 
 #design of the UI of the music player
 canvas = tk.Tk()
 canvas.title("Music Player")
 canvas.geometry("880x800")
 canvas.config(bg = 'white')
+canvas.resizable(True, True)
 
 #file for music
 rootpath = "./music/"#path for the music play list
 pattern = "*.wav"
 
-prev_image = tk.PhotoImage(file = "prev.png")
-stop_image = tk.PhotoImage(file = "stop.png")
-play_image = tk.PhotoImage(file = "play.png")
-pause_image = tk.PhotoImage(file = "pause.png")
-next_image = tk.PhotoImage(file = "next.png")
-add_image = tk.PhotoImage(file = "add.png")
+prev_image = tk.PhotoImage(file = "./images/prev.png")
+stop_image = tk.PhotoImage(file = "./images/stop.png")
+play_image = tk.PhotoImage(file = "./images/play.png")
+pause_image = tk.PhotoImage(file = "./images/pause.png")
+next_image = tk.PhotoImage(file = "./images/next.png")
+add_image = tk.PhotoImage(file = "./images/add.png")
 
 play_obj = None
 
@@ -33,6 +36,7 @@ def select():
     label.config(text = listBox.get("anchor"))
     playmusic(rootpath + listBox.get("anchor"))
     show_lyrics(rootpath + listBox.get("anchor"))
+    show_art(rootpath + listBox.get("anchor"))
     
 #action for the stop button: to clear a song when it is activated
 def stop():
@@ -66,10 +70,10 @@ def play_prev():
 def pause_song():
     if pauseButton["text"] == "Pause":
         play_obj.pause()
-        pauseButton["text"] == "Play"
+        pauseButton["text"] = "Play"
     else:
         play_obj.resume()
-        pauseButton["text"] == "Pause"
+        pauseButton["text"] = "Pause"
 
 def playmusic(file_path):
     with open(file_path, 'rb') as wave_file:
@@ -155,8 +159,19 @@ def save_wav(file_path):
 listBox = tk.Listbox(canvas, fg = "cyan", bg = "white", width = 100, font = ('poppins',14))
 listBox.pack(padx = 15, pady = 15)
 
+music_info = tk.Frame(canvas, bg = "black")
+music_info.pack(padx = 15, pady = 15, anchor = 'center')
+
 label = tk.Label(canvas, text = '', bg = 'black', fg = 'yellow', font = ('poppins',14))
-label.pack(pady = 15)
+label.pack(pady = 15, side='left', in_ = music_info)
+
+TARGET_SIZE = (128, 128)
+loaded_img = Image.open("./images/art.jpeg")
+resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+img = ImageTk.PhotoImage(resized_img)
+panel = tk.Label(canvas, image = img)
+panel.image = img
+panel.pack(side = "left", in_ = music_info, fill = "both", expand = "yes")
 
 lyricsText = tk.Text(canvas, bg = 'black', fg = 'yellow', font = ('poppins',14), width = 100, height = 10)
 lyricsText.pack(padx = 15, pady = 15)
@@ -209,5 +224,20 @@ def show_lyrics(song):
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
+
+def show_art(file_path):
+        album_art = database.get_album_art(file_path)
+        if album_art is None:
+            print("No album art found")
+            return
+        album_art_data = album_art.data
+        # album_art_format = album_art.mime.split('/')[1]
+
+        loaded_img = Image.open(BytesIO(album_art_data))
+        # loaded_img = Image.open("./images/art.jpeg")
+        resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+        img = ImageTk.PhotoImage(resized_img)
+        panel.config(image = img)
+        panel.image = img
 
 canvas.mainloop()
