@@ -9,6 +9,7 @@ import database
 import soundfile as sf
 from io import BytesIO
 from PIL import ImageTk, Image
+import ast
 
 #design of the UI of the music player
 canvas = tk.Tk()
@@ -111,7 +112,18 @@ def playmusic(file_path):
         data_type = np.int8
     elif bits_per_sample == 24:
         data, sample_rate = sf.read(file_path)
+        audio = sf.SoundFile(file_path)
+
+        keys = list(audio.copy_metadata().keys())
+        print(keys)
         sf.write(file_path, data, sample_rate, subtype='PCM_16')
+
+        # with sf.SoundFile(file_path, 'w', sample_rate, audio.channels) as f:
+        #     for key in keys:
+        #         if key != "date":
+        #             f.__setattr__(key, str(audio.__getattr__(key)))
+
+            # print("file path: " + file_path)
         playmusic(file_path)
         return
     else:
@@ -219,25 +231,36 @@ read_file(rootpath, pattern)
 
 # show lyrics of the song in the text box
 def show_lyrics(song):
+    # get filename without the extension
+    song = os.path.basename(song)
+    print(song)
     # get the lyrics of the song
-    lyrics = database.get_lyrics(song)
+    lyrics = database.music_df.loc[database.music_df['filename'] == song, 'lyrics'].values[0]
+    # lyrics = lyrics.to_string(index=False)
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
 
 def show_art(file_path):
-        album_art = database.get_album_art(file_path)
-        if album_art is None:
+        # get filename without the extension
+        song = os.path.basename(file_path)
+        print(file_path)
+        album_art_data = database.music_df.loc[database.music_df['filename'] == song, 'album_art'].values[0]
+        if album_art_data is None:
             print("No album art found")
-            return
-        album_art_data = album_art.data
+            loaded_img = Image.open("./images/art.jpeg")
+        else:
+            loaded_img = Image.open(BytesIO(ast.literal_eval(album_art_data)))
+        # album_art_data = album_art.data
         # album_art_format = album_art.mime.split('/')[1]
 
-        loaded_img = Image.open(BytesIO(album_art_data))
+        # loaded_img = Image.open(BytesIO(album_art_data))
         # loaded_img = Image.open("./images/art.jpeg")
         resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
         img = ImageTk.PhotoImage(resized_img)
         panel.config(image = img)
         panel.image = img
+
+database.load_from_csv(database.database_path)
 
 canvas.mainloop()

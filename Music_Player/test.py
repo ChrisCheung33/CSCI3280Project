@@ -7,16 +7,17 @@ import struct
 import tkinter as tk
 from io import BytesIO
 import database
+import ast
 
 # file_path = './music/ZenZenZense.wav'
 # file_path = './music/heartache.wav'
-file_path = './music/numb.wav'
+# file_path = './music/numb.wav'
 
 # data, samplerate = sf.read(file_path)
 
 
 # audio = mutagen.File(file_path)
-audio = WAVE(file_path)
+# audio = WAVE(file_path)
 
 # audio = sf.SoundFile(file_path)
 # filename = os.path.basename(file_path)
@@ -71,40 +72,48 @@ audio = WAVE(file_path)
 # print(bit_depth, "bit")
 
 # # get lyrics from the audio file
-lyrics = audio.tags['TXXX:LYRICS']
-print(lyrics)
+# lyrics = audio.tags['TXXX:LYRICS']
+# print(lyrics)
 
 
-from PIL import ImageTk, Image
+# from PIL import ImageTk, Image
 # get album art from the audio file
 # album_art = audio.tags['APIC:']
-album_art = database.get_album_art(file_path)
-album_art_data = album_art.data
+# album_art = database.get_album_art(file_path)
+# print(album_art)
+# album_art_data = album_art.data
+# print(album_art_data)
+# print(album_art_data[:20])
 # album_art_format = album_art.mime.split('/')[1]
 # print(album_art_format)
 # print(album_art[0:10])
 # album_art = album_art.decode('utf-8')
 
 # show the album art in a window
-root = tk.Tk()
-root.title("Album Art")
-root.geometry("800x800")
-root.resizable(True, True)
+# root = tk.Tk()
+# root.title("Album Art")
+# root.geometry("800x800")
+# root.resizable(True, True)
 # img = tk.BitmapImage(data=album_art)
 # img = ImageTk.PhotoImage(data=album_art_data, format=album_art_format)
 
-music_info = tk.Frame(root, bg = "black")
-music_info.pack(padx = 15, pady = 15, anchor = 'center')
+# music_info = tk.Frame(root, bg = "black")
+# music_info.pack(padx = 15, pady = 15, anchor = 'center')
 
-# resize the image to fixed size (256, 256)
-TARGET_SIZE = (128, 128)
-loaded_img = Image.open(BytesIO(album_art_data))
-print(loaded_img)
-resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
-img = ImageTk.PhotoImage(resized_img)
+# # resize the image to fixed size (256, 256)
+# TARGET_SIZE = (128, 128)
+# loaded_img = Image.open(BytesIO(album_art_data))
+# print(loaded_img)
+# resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+# img = ImageTk.PhotoImage(resized_img)
 
-panel = tk.Label(root, image = img)
+# panel = tk.Label(root, image = img)
 
-panel.pack(side = "bottom", fill = "both", expand = "yes", in_ = music_info)
+# panel.pack(side = "bottom", fill = "both", expand = "yes", in_ = music_info)
 
-root.mainloop()
+# root.mainloop()
+
+string_data = "b'\\xff\\xd8\\xff'"
+byte_data = ast.literal_eval(string_data)
+print(byte_data)
+print(type(byte_data))

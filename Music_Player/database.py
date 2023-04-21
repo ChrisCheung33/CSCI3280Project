@@ -5,18 +5,29 @@ import soundfile as sf
 from mutagen.wave import WAVE
 
 # Create an empty DataFrame to store music information
-music_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist'])
+music_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist', 'lyrics', 'album_art'])
 
 database_path = os.path.join(os.path.dirname(__file__), 'music_database.csv')
 
 # Function to add a music to the DataFrame
-def add_music(filename, title, album, length, artist):
+def add_music(filename, title, album, length, artist, lyrics=None, album_art=None):
     global music_df
 
     if not music_df[music_df['title'] == title].empty:
         print(f"A song with the title '{title}' already exists in the database.")
     else:
-        music_info_row = {'filename': filename, 'album': album, 'title': title, 'length': length, 'artist': artist}
+        if lyrics == None:
+            print("No lyrics found.")
+            lyrics = "No lyrics found."
+
+        music_info_row = {'filename': filename,
+                          'album': album,
+                          'title': title,
+                          'length': length,
+                          'artist': artist,
+                          'lyrics': lyrics,
+                          'album_art': album_art
+                          }
         list_of_music_info = music_df.to_dict('records')
         list_of_music_info.append(music_info_row)
 
@@ -108,8 +119,10 @@ def upload_wav():
     title = audio.__getattr__('title')
     album = audio.__getattr__('album')
     length = audio.frames / audio.samplerate
+    lyrics = get_lyrics(file_path)
+    album_art = get_album_art(file_path)
 
-    add_music(filename, title, album, length, artist)
+    add_music(filename, title, album, length, artist, lyrics, album_art)
     return file_path
 
 # get length in mm:ss format
@@ -124,14 +137,16 @@ def get_lyrics(filename):
     try:
         audio = WAVE(filename)
         lyrics = audio.tags['TXXX:LYRICS']
+        if lyrics == '':
+            lyrics = None
     except:
-        lyrics = "No lyrics found."
+        lyrics = None
     return lyrics
 
 def get_album_art(filename):
     try:
         audio = WAVE(filename)
-        album_art = audio.tags['APIC:']
+        album_art = repr(audio.tags['APIC:'].data)
     except:
         album_art = None
     return album_art
