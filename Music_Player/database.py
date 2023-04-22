@@ -110,11 +110,10 @@ def search_music(filename=None, title=None, album=None, min_length=None, max_len
     print()
     
 
-
-def search_all(target):
+def search(target):
     global music_df
 
-    print("Search result:")
+    # print("Search result:")
 
     filename_search_result = search_music(filename=target, all=True)
     title_search_result = search_music(title=target, all=True)
@@ -131,11 +130,7 @@ def search_all(target):
     results = results.drop_duplicates(subset=['filename'], keep='first')
     results = results.sort_values(by = 'filename')
 
-    if len(results):
-        print(results.to_string(index=False))
-    else:
-        print(f"No search result for \"{target}\".")
-    print()
+    return results
 
 # Function to save the music information to a CSV file
 def save_to_csv(filename):

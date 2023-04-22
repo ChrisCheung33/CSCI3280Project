@@ -260,6 +260,28 @@ def save_changes(filename, title, artist, album, editWindow):
     # close the window
     editWindow.destroy()
 
+# search for songs in the database and show them in the treeview
+# the search is case insensitive
+# the search is done by the title, artist and album
+def search():
+    # get the text from the search bar
+    search = searchBar.get()
+    # clear the treeview
+    for row in tree.get_children():
+        tree.delete(row)
+    # get the songs that match the search
+    search_result = database.search(search)
+    # add the songs to the treeview
+    for index, row in search_result.iterrows():
+        tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
+ 
+
+searchBar = tk.Entry(canvas, width = 30, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
+searchBar.pack(padx = 15, pady = 15, anchor = 'center')
+
+enterButton = tk.Button(canvas, text = "Enter", bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14), command = search)
+enterButton.pack(padx = 15, pady = 15, anchor = 'center')
+
 tree = ttk.Treeview(canvas, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
 tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
