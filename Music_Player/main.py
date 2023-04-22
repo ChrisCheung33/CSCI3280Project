@@ -325,7 +325,7 @@ panel.pack(side = "top")
 label = tk.Label(music_info, text = 'Choose a song to play', bg = '#495579', fg = '#FFFBEB', font = ('poppins',14))
 label.pack(pady = 15, side='top')
 
-lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 50, height = 20)
+lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 50, height = 15)
 lyricsText.pack(padx = 15, pady = 15, side = 'bottom')
 
 top = tk.Frame(music_info, bg = "#495579")
