@@ -320,12 +320,12 @@ resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
 panel = tk.Label(music_info, image = img, bg='#495579')
 panel.image = img
-panel.pack(side = "top", fill = "both", expand = "yes")
+panel.pack(side = "top")
 
 label = tk.Label(music_info, text = 'Choose a song to play', bg = '#495579', fg = '#FFFBEB', font = ('poppins',14))
 label.pack(pady = 15, side='top')
 
-lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 50, height = 10)
+lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 50, height = 20)
 lyricsText.pack(padx = 15, pady = 15, side = 'bottom')
 
 top = tk.Frame(music_info, bg = "#495579")
