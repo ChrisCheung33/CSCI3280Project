@@ -276,11 +276,18 @@ def search():
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
  
 
-searchBar = tk.Entry(canvas, width = 30, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
-searchBar.pack(padx = 15, pady = 15, anchor = 'center')
+# frame for search
+searchFrame = tk.Frame(canvas, bg = "#495579")
+searchFrame.pack(padx = 15, pady = 15, anchor = 'center')
 
-enterButton = tk.Button(canvas, text = "Enter", bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14), command = search)
-enterButton.pack(padx = 15, pady = 15, anchor = 'center')
+searchLabel = tk.Label(searchFrame, text = "Search:", bg = "#495579", fg = "#FFFBEB", font = ("poppins", 14))
+searchLabel.pack(padx = 15, pady = 15, anchor = 'center', side='left')
+
+searchBar = tk.Entry(searchFrame, width = 60, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
+searchBar.pack(padx = 15, pady = 15, anchor = 'center', side='left')
+
+enterButton = tk.Button(searchFrame, text = "Enter", bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14), command = search)
+enterButton.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
 tree = ttk.Treeview(canvas, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
 tree.heading("Name", text = "Name")
