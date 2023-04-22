@@ -14,8 +14,9 @@ import ast
 
 #design of the UI of the music player
 canvas = tk.Tk()
+canvas.attributes("-fullscreen", True)
 canvas.title("Music Player")
-canvas.geometry("880x800")
+# canvas.geometry("1000x800")
 canvas.config(bg = '#495579')
 canvas.resizable(True, True)
 
@@ -23,13 +24,13 @@ canvas.resizable(True, True)
 rootpath = "./music/"#path for the music play list
 pattern = "*.wav"
 
-prev_image = ImageTk.PhotoImage(file = "./images/prev.png")
-stop_image = tk.PhotoImage(file = "./images/stop.png")
-play_image = tk.PhotoImage(file = "./images/play.png")
-pause_image = tk.PhotoImage(file = "./images/pause.png")
-next_image = tk.PhotoImage(file = "./images/next.png")
-add_image = ImageTk.PhotoImage(file = "./images/add.png")
-edit_image = ImageTk.PhotoImage(file = "./images/edit.png")
+# prev_image = tk.PhotoImage(file = "./images/prev.png")
+# stop_image = tk.PhotoImage(file = "./images/stop.png")
+# play_image = tk.PhotoImage(file = "./images/play.png")
+# pause_image = tk.PhotoImage(file = "./images/pause.png")
+# next_image = tk.PhotoImage(file = "./images/next.png")
+# add_image = ImageTk.PhotoImage(file = "./images/add.png")
+# edit_image = ImageTk.PhotoImage(file = "./images/edit.png")
 
 play_obj = None
 
@@ -94,13 +95,13 @@ def play_prev():
     playmusic(rootpath + selected_song_path)
 
 #action for the pause button: to pause the song when it is playing and unpuase it  when it is paused
-def pause_song():
-    if pauseButton["text"] == "Pause":
-        play_obj.pause()
-        pauseButton["text"] = "Play"
-    else:
-        play_obj.resume()
-        pauseButton["text"] = "Pause"
+# def pause_song():
+#     if pauseButton["text"] == "Pause":
+#         play_obj.pause()
+#         pauseButton["text"] = "Play"
+#     else:
+#         play_obj.resume()
+#         pauseButton["text"] = "Pause"
 
 def playmusic(file_path):
     with open(file_path, 'rb') as wave_file:
@@ -276,11 +277,19 @@ def search():
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
  
 
+# create a sidebar
+# sidebar = tk.Frame(canvas, bg = "#495579")
+# sidebar.pack(side = 'left', fill = 'both')
+
+# create a main frame
+mainFrame = tk.Frame(canvas, bg = "#251749")
+mainFrame.pack(side = 'right', fill = 'both')
+
 # frame for search
-searchFrame = tk.Frame(canvas, bg = "#495579")
+searchFrame = tk.Frame(mainFrame, bg = "#251749")
 searchFrame.pack(padx = 15, pady = 15, anchor = 'center')
 
-searchLabel = tk.Label(searchFrame, text = "Search:", bg = "#495579", fg = "#FFFBEB", font = ("poppins", 14))
+searchLabel = tk.Label(searchFrame, text = "Search:", bg = "#251749", fg = "#FFFBEB", font = ("poppins", 14))
 searchLabel.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
 searchBar = tk.Entry(searchFrame, width = 60, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
@@ -289,7 +298,7 @@ searchBar.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 enterButton = tk.Button(searchFrame, text = "Enter", bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14), command = search)
 enterButton.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
-tree = ttk.Treeview(canvas, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
+tree = ttk.Treeview(mainFrame, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
 tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
 tree.heading("Album", text = "Album")
@@ -299,38 +308,44 @@ tree.column("Artist", width = 200)
 tree.column("Album", width = 200)
 tree.column("Time", width = 50)
 tree.pack(padx = 15, pady = 15)
-ttk.Style().configure("Treeview", background="#263159", 
+ttk.Style().configure("Treeview", background="#251749", 
 foreground="#FFFBEB", fieldbackground="#495579")
 
 music_info = tk.Frame(canvas, bg = "#495579", width=800)
-music_info.pack(padx = 15, pady = 15, anchor = 'center')
+music_info.pack(padx = 15, pady = 15, anchor = 'center', expand=True, fill='both')
 
-label = tk.Label(music_info, text = 'Choose a song to play', bg = '#495579', fg = '#FFFBEB', font = ('poppins',14))
-label.pack(pady = 15, side='top')
-
-TARGET_SIZE = (128, 128)
+TARGET_SIZE = (256, 256)
 loaded_img = Image.open("./images/art.jpeg")
 resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
 panel = tk.Label(music_info, image = img, bg='#495579')
 panel.image = img
-panel.pack(side = "left", fill = "both", expand = "yes")
+panel.pack(side = "top", fill = "both", expand = "yes")
 
-lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 70, height = 10)
-lyricsText.pack(padx = 15, pady = 15, side = 'right')
+label = tk.Label(music_info, text = 'Choose a song to play', bg = '#495579', fg = '#FFFBEB', font = ('poppins',14))
+label.pack(pady = 15, side='top')
 
-top = tk.Frame(canvas, bg = "#495579")
+lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 50, height = 10)
+lyricsText.pack(padx = 15, pady = 15, side = 'bottom')
+
+top = tk.Frame(music_info, bg = "#495579")
 top.pack(padx = 15, pady = 15, anchor = 'center')
 
+
+TARGET_SIZE_SMALL = (64, 64)
+
 #Button for previous song
+prev_image = ImageTk.PhotoImage(Image.open("./images/prev.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 prevButton = tk.Button(top, text = 'Prev', image = prev_image, bg = '#495579', borderwidth = 0, command= play_prev)
 prevButton.pack(pady = 15, side = 'left')
 
 #Button for stop song
+stop_image = ImageTk.PhotoImage(Image.open("./images/stop.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 stopButton = tk.Button(top, text = 'Stop', image = stop_image, bg = '#495579', borderwidth = 0, command = stop)
 stopButton.pack(pady = 15, side = 'left')
 
 #Button for play song
+play_image = ImageTk.PhotoImage(Image.open("./images/play.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 playButton = tk.Button(top, text = 'Play', image = play_image, bg = '#495579', borderwidth = 0, command = select)
 playButton.pack(pady = 15, side = 'left')
 
@@ -339,14 +354,17 @@ playButton.pack(pady = 15, side = 'left')
 # pauseButton.pack(pady = 15, side = 'left')
 
 #Button for next song
+next_image = ImageTk.PhotoImage(Image.open("./images/next.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 nextButton = tk.Button(top, text = 'Next', image = next_image, bg = '#495579', borderwidth = 0, command = play_next)
 nextButton.pack(pady = 15, side = 'left')
 
 # Button for add song
+add_image = ImageTk.PhotoImage(Image.open("./images/add.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 addButton = tk.Button(top, text = 'Add', image = add_image, bg = '#495579', borderwidth = 0, command = add_song)
 addButton.pack(pady = 15, side = 'left')
 
 # Button for edit song
+edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 editButton = tk.Button(top, text = 'Edit', image = edit_image, bg = '#495579', borderwidth = 0, command = edit_song)
 editButton.pack(pady = 15, side = 'left')
 
