@@ -47,6 +47,35 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         music_df = pd.DataFrame.from_records(list_of_music_info)
         save_to_csv(database_path)
 
+# Function to update a music in the DataFrame
+def update_music(filename, title, album, artist):
+    global music_df
+
+    if title == None or title == "":
+        title = os.path.basename(filename)
+        title = os.path.splitext(title)[0]
+
+    if album == None or album == "":
+        album = "Unknown"
+    
+    if artist == None or artist == "":
+        artist = "Unknown"
+
+    music_info_row = {'filename': filename,
+                        'album': album,
+                        'title': title,
+                        'length': music_df.loc[music_df['filename'] == filename, 'length'].values[0],
+                        'artist': artist,
+                        'lyrics': music_df.loc[music_df['filename'] == filename, 'lyrics'].values[0],
+                        'album_art': music_df.loc[music_df['filename'] == filename, 'album_art'].values[0]
+                        }
+    music_df = music_df[music_df['filename'] != filename]
+    list_of_music_info = music_df.to_dict('records')
+    list_of_music_info.append(music_info_row)
+
+    music_df = pd.DataFrame.from_records(list_of_music_info)
+    save_to_csv(database_path)
+
 # Function to remove a music from the DataFrame
 def remove_music(title):
     global music_df

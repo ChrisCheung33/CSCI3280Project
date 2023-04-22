@@ -29,6 +29,7 @@ play_image = tk.PhotoImage(file = "./images/play.png")
 pause_image = tk.PhotoImage(file = "./images/pause.png")
 next_image = tk.PhotoImage(file = "./images/next.png")
 add_image = ImageTk.PhotoImage(file = "./images/add.png")
+edit_image = ImageTk.PhotoImage(file = "./images/edit.png")
 
 play_obj = None
 
@@ -195,6 +196,70 @@ def save_wav(file_path):
     shutil.copy2(source_file, destination_file)
     return destination_file
 
+# let the user to edit the information like the name of the song, artist and album and store it in the database
+def edit_song():
+    # get the selected song
+    selected = tree.selection()
+    # get the title of the selected song
+    name = tree.item(selected, 'values')[0]
+    # get the filename of the song
+    filename = database.get_filename(name)
+    # get the artist of the song
+    artist = database.music_df.loc[database.music_df['filename'] == filename, 'artist'].values[0]
+    # get the album of the song
+    album = database.music_df.loc[database.music_df['filename'] == filename, 'album'].values[0]
+    
+    # create a new window
+    editWindow = tk.Toplevel()
+    editWindow.title("Edit")
+    editWindow.geometry("400x200")
+    editWindow.resizable(False, False)
+    editWindow.configure(bg = "#495579")
+    # create a frame
+    editFrame = tk.Frame(editWindow, bg = "#495579")
+    editFrame.pack(padx = 15, pady = 15, anchor = 'center')
+    # create a label for the name of the song
+    nameLabel = tk.Label(editFrame, text = "Name", bg = "#495579", fg = "#FFFBEB", font = ("poppins", 14))
+    nameLabel.grid(row = 0, column = 0, padx = 5, pady = 5)
+    # create a label for the artist of the song
+    artistLabel = tk.Label(editFrame, text = "Artist", bg = "#495579", fg = "#FFFBEB", font = ("poppins", 14))
+    artistLabel.grid(row = 1, column = 0, padx = 5, pady = 5)
+    # create a label for the album of the song
+    albumLabel = tk.Label(editFrame, text = "Album", bg = "#495579", fg = "#FFFBEB", font = ("poppins", 14))
+    albumLabel.grid(row = 2, column = 0, padx = 5, pady = 5)
+    # create an entry for the name of the song
+    nameEntry = tk.Entry(editFrame, width = 30, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
+    nameEntry.grid(row = 0, column = 1, padx = 5, pady = 5)
+    nameEntry.insert(0, name)
+    # create an entry for the artist of the song
+    artistEntry = tk.Entry(editFrame, width = 30, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
+    artistEntry.grid(row = 1, column = 1, padx = 5, pady = 5)
+    artistEntry.insert(0, artist)
+    # create an entry for the album of the song
+    albumEntry = tk.Entry(editFrame, width = 30, bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14))
+    albumEntry.grid(row = 2, column = 1, padx = 5, pady = 5)
+    albumEntry.insert(0, album)
+
+    # create a button for save the changes
+    saveButton = tk.Button(editFrame, text = "Save", bg = "#FFFBEB", fg = "#495579", font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), editWindow))
+    saveButton.grid(row = 3, column = 0, columnspan = 2, padx = 5, pady = 5)
+
+
+def save_changes(filename, title, artist, album, editWindow):
+    # get the selected song
+    selected = tree.selection()
+    
+    # update the database
+    database.update_music(filename, title, album, artist)
+
+    length = database.get_format_length(database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0])
+    
+    # update the treeview
+    tree.item(selected, values = (title, artist, album, length))
+
+    # close the window
+    editWindow.destroy()
+
 tree = ttk.Treeview(canvas, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "5")
 tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
@@ -252,6 +317,10 @@ nextButton.pack(pady = 15, side = 'left')
 addButton = tk.Button(top, text = 'Add', image = add_image, bg = '#495579', borderwidth = 0, command = add_song)
 addButton.pack(pady = 15, side = 'left')
 
+# Button for edit song
+editButton = tk.Button(top, text = 'Edit', image = edit_image, bg = '#495579', borderwidth = 0, command = edit_song)
+editButton.pack(pady = 15, side = 'left')
+
 def read_file_to_treeview(rootpath, pattern):
     filename_list = []
     for root, dirs, files in os.walk(rootpath):
@@ -271,7 +340,6 @@ def read_file_to_treeview(rootpath, pattern):
         time = database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0]
         # insert the song in the treeview
         tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
-
 
 
 # show lyrics of the song in the text box
