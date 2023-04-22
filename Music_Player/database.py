@@ -18,10 +18,10 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         title = os.path.splitext(title)[0]
 
     if album == None or album == "":
-        album = "None"
+        album = "Unknown"
     
     if artist == None or artist == "":
-        artist = "None"
+        artist = "Unknown"
 
     if not music_df[music_df['title'] == title].empty:
         print(f"A song with the title '{title}' already exists in the database.")
@@ -56,10 +56,10 @@ def update_music(filename, title, album, artist):
         title = os.path.splitext(title)[0]
 
     if album == None or album == "":
-        album = "None"
+        album = "Unknown"
     
     if artist == None or artist == "":
-        artist = "None"
+        artist = "Unknown"
 
     music_info_row = {'filename': filename,
                         'album': album,
