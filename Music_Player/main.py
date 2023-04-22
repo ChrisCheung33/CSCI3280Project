@@ -306,8 +306,8 @@ playButton = tk.Button(top, text = 'Play', image = play_image, bg = '#495579', b
 playButton.pack(pady = 15, side = 'left')
 
 #Button for pause song
-pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = '#495579', borderwidth = 0, command = pause_song)
-pauseButton.pack(pady = 15, side = 'left')
+# pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = '#495579', borderwidth = 0, command = pause_song)
+# pauseButton.pack(pady = 15, side = 'left')
 
 #Button for next song
 nextButton = tk.Button(top, text = 'Next', image = next_image, bg = '#495579', borderwidth = 0, command = play_next)
