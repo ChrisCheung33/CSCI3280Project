@@ -16,19 +16,19 @@ import ast
 canvas = tk.Tk()
 canvas.title("Music Player")
 canvas.geometry("880x800")
-canvas.config(bg = 'white')
+canvas.config(bg = '#495579')
 canvas.resizable(True, True)
 
 #file for music
 rootpath = "./music/"#path for the music play list
 pattern = "*.wav"
 
-prev_image = tk.PhotoImage(file = "./images/prev.png")
+prev_image = ImageTk.PhotoImage(file = "./images/prev.png")
 stop_image = tk.PhotoImage(file = "./images/stop.png")
 play_image = tk.PhotoImage(file = "./images/play.png")
 pause_image = tk.PhotoImage(file = "./images/pause.png")
 next_image = tk.PhotoImage(file = "./images/next.png")
-add_image = tk.PhotoImage(file = "./images/add.png")
+add_image = ImageTk.PhotoImage(file = "./images/add.png")
 
 play_obj = None
 
@@ -48,6 +48,7 @@ def select():
 def stop():
     sa.stop_all()
     label.config(text = "Choose a song to play")
+    show_lyrics("")
     show_art("")
     tree.selection_remove(tree.focus())
     canvas.focus()
@@ -129,7 +130,6 @@ def playmusic(file_path):
         raw_data = wave_file.read(data_chunk_size)
 
     # Convert raw byte data to NumPy array with proper data type
-    bytes_per_sample = bits_per_sample // 8
     if bits_per_sample == 16:
         data_type = np.int16
     elif bits_per_sample == 8:
@@ -148,11 +148,16 @@ def playmusic(file_path):
         raise ValueError('File has unsupported bit depth.')
     
     audio_array = np.frombuffer(raw_data, dtype=data_type)
-        
+
 
     # Reshape the array for stereo audio
     if num_channels == 2:
-        audio_array = audio_array.reshape(-1, 2)
+        try:
+            print("Trying to reshape")
+            audio_array = audio_array.reshape(-1, 2)
+        except:
+            audio_array = audio_array.reshape(-1, 1)
+            audio_array = np.concatenate((audio_array, audio_array), axis=1)
 
     global play_obj
     play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
@@ -195,51 +200,57 @@ tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
 tree.heading("Album", text = "Album")
 tree.heading("Time", text = "Time")
+tree.column("Name", width = 350)
+tree.column("Artist", width = 200)
+tree.column("Album", width = 200)
+tree.column("Time", width = 50)
 tree.pack(padx = 15, pady = 15)
+ttk.Style().configure("Treeview", background="#263159", 
+foreground="#FFFBEB", fieldbackground="#495579")
 
-music_info = tk.Frame(canvas, bg = "black")
+music_info = tk.Frame(canvas, bg = "#495579", width=800)
 music_info.pack(padx = 15, pady = 15, anchor = 'center')
 
-label = tk.Label(music_info, text = 'Choose a song to play', bg = 'black', fg = 'yellow', font = ('poppins',14))
+label = tk.Label(music_info, text = 'Choose a song to play', bg = '#495579', fg = '#FFFBEB', font = ('poppins',14))
 label.pack(pady = 15, side='top')
 
 TARGET_SIZE = (128, 128)
 loaded_img = Image.open("./images/art.jpeg")
 resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
-panel = tk.Label(music_info, image = img, bg='black')
+panel = tk.Label(music_info, image = img, bg='#495579')
 panel.image = img
 panel.pack(side = "left", fill = "both", expand = "yes")
 
-lyricsText = tk.Text(music_info, bg = 'black', fg = 'yellow', font = ('poppins',14), width = 100, height = 10)
+lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = '#263159', fg = '#FFFBEB', font = ('poppins',14), width = 70, height = 10)
 lyricsText.pack(padx = 15, pady = 15, side = 'right')
 
-top = tk.Frame(canvas, bg = "black")
+top = tk.Frame(canvas, bg = "#495579")
 top.pack(padx = 15, pady = 15, anchor = 'center')
 
 #Button for previous song
-prevButton = tk.Button(canvas, text = 'Prev', image = prev_image, bg = 'black', borderwidth = 0, command= play_prev)
-prevButton.pack(pady = 15, in_ = top, side = 'left')
+prevButton = tk.Button(top, text = 'Prev', image = prev_image, bg = '#495579', borderwidth = 0, command= play_prev)
+prevButton.pack(pady = 15, side = 'left')
 
 #Button for stop song
-stopButton = tk.Button(canvas, text = 'Stop', image = stop_image, bg = 'black', borderwidth = 0, command = stop)
-stopButton.pack(pady = 15, in_ = top, side = 'left')
+stopButton = tk.Button(top, text = 'Stop', image = stop_image, bg = '#495579', borderwidth = 0, command = stop)
+stopButton.pack(pady = 15, side = 'left')
 
 #Button for play song
-playButton = tk.Button(canvas, text = 'Play', image = play_image, bg = 'black', borderwidth = 0, command = select)
-playButton.pack(pady = 15, in_ = top, side = 'left')
+playButton = tk.Button(top, text = 'Play', image = play_image, bg = '#495579', borderwidth = 0, command = select)
+playButton.pack(pady = 15, side = 'left')
 
 #Button for pause song
-pauseButton = tk.Button(canvas, text = 'Pause', image = pause_image, bg = 'black', borderwidth = 0, command = pause_song)
-pauseButton.pack(pady = 15, in_ = top, side = 'left')
+pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = '#495579', borderwidth = 0, command = pause_song)
+pauseButton.pack(pady = 15, side = 'left')
 
 #Button for next song
-nextButton = tk.Button(canvas, text = 'Next', image = next_image, bg = 'black', borderwidth = 0, command = play_next)
-nextButton.pack(pady = 15, in_ = top, side = 'left')
+nextButton = tk.Button(top, text = 'Next', image = next_image, bg = '#495579', borderwidth = 0, command = play_next)
+nextButton.pack(pady = 15, side = 'left')
 
 # Button for add song
-addButton = tk.Button(canvas, text = 'Add', image = add_image, bg = 'black', borderwidth = 0, command = add_song)
-addButton.pack(pady = 15, in_ = top, side = 'left')
+addButton = tk.Button(top, text = 'Add', image = add_image, bg = '#495579', borderwidth = 0, command = add_song)
+addButton.pack(pady = 15, side = 'left')
 
 def read_file_to_treeview(rootpath, pattern):
     filename_list = []
@@ -264,7 +275,11 @@ def read_file_to_treeview(rootpath, pattern):
 
 
 # show lyrics of the song in the text box
-def show_lyrics(song):
+def show_lyrics(song=""):
+    lyricsText.config(state=tk.NORMAL)
+    if song == "":
+        lyricsText.delete('1.0', 'end')
+        return
     # get filename without the extension
     song = os.path.basename(song)
     print(song)
@@ -273,6 +288,7 @@ def show_lyrics(song):
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
+    lyricsText.config(state=tk.DISABLED)
 
 def show_art(file_path):
         # get filename without the extension
@@ -283,7 +299,7 @@ def show_art(file_path):
         except:
             album_art_data = None
 
-        if album_art_data is None or album_art_data == "null" or type(album_art_data) != str:
+        if album_art_data is None or album_art_data == "null" or type(album_art_data) != str or file_path=="":
             loaded_img = Image.open("./images/art.jpeg")
         else:
             loaded_img = Image.open(BytesIO(ast.literal_eval(album_art_data)))

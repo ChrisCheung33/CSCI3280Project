@@ -118,28 +118,52 @@
 # print(byte_data)
 # print(type(byte_data))
 
-import tkinter as tk
-from tkinter import ttk
+# import tkinter as tk
+# from tkinter import ttk
 
-root = tk.Tk()
+# root = tk.Tk()
 
-tree = ttk.Treeview(root)
-tree.pack()
+# tree = ttk.Treeview(root)
+# tree.pack()
 
-for i in range(10):
-    tree.insert("", "end", text=f"Item {i}")
+# for i in range(10):
+#     tree.insert("", "end", text=f"Item {i}")
 
-def focus_next_row():
-    selected_item = tree.selection()
-    if selected_item:
-        next_item = tree.index(selected_item[0]) + 1
-        if next_item < len(tree.get_children()):
-            tree.focus(tree.get_children()[next_item])
-            tree.selection_set(tree.get_children()[next_item])
+# def focus_next_row():
+#     selected_item = tree.selection()
+#     if selected_item:
+#         next_item = tree.index(selected_item[0]) + 1
+#         if next_item < len(tree.get_children()):
+#             tree.focus(tree.get_children()[next_item])
+#             tree.selection_set(tree.get_children()[next_item])
 
-tree.bind("<Down>", focus_next_row)
+# tree.bind("<Down>", focus_next_row)
 
-button = tk.Button(root, text="Focus next row", command=focus_next_row)
-button.pack()
+# button = tk.Button(root, text="Focus next row", command=focus_next_row)
+# button.pack()
 
-root.mainloop()
+# root.mainloop()
+
+# import pandas as pd
+
+# df = pd.DataFrame([
+#   ["1", "太郎"],
+#   ["2", "花子"]],
+#   columns=['id', '名前'])
+
+# print(df)
+
+# # test.csvとして出力
+# df.to_csv("test.csv")
+
+# import tkinter as tk
+# from PIL import Image, ImageTk
+
+# root = tk.Tk()
+
+# button = tk.Button(self.left_menu)
+# button_load = Image.open('./images/add.png')
+# root.button_img = ImageTk.PhotoImage(button_load)
+# button.config(image=root.button_img)
+
+# button_1.pack(side='top')

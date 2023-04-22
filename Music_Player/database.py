@@ -13,6 +13,16 @@ database_path = os.path.join(os.path.dirname(__file__), 'music_database.csv')
 def add_music(filename, title, album, length, artist, lyrics=None, album_art=None):
     global music_df
 
+    if title == None or title == "":
+        title = os.path.basename(filename)
+        title = os.path.splitext(title)[0]
+
+    if album == None or album == "":
+        album = "Unknown"
+    
+    if artist == None or artist == "":
+        artist = "Unknown"
+
     if not music_df[music_df['title'] == title].empty:
         print(f"A song with the title '{title}' already exists in the database.")
     else:
