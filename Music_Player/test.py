@@ -11,7 +11,7 @@
 
 # file_path = './music/ZenZenZense.wav'
 # file_path = './music/heartache.wav'
-# file_path = './music/numb.wav'
+file_path = './music/numb.wav'
 
 # data, samplerate = sf.read(file_path)
 
@@ -168,103 +168,106 @@
 
 # button_1.pack(side='top')
 
-# import tkinter as tk
-# from pygame import mixer
-
-# root = tk.Tk()
-# root.title("Music Player")
-# root.geometry("800x800")
-# root.resizable(True, True)
-
-# mixer.init()
-# audio = mixer.music.load(file_path)
-# mixer.music.play()
-
-# def change_vol(_=None):
-#     mixer.music.set_volume(vol.get() / 100)
-
-# vol = tk.Scale(
-#     root,
-#     from_ = 0,
-#     to = 100,
-#     orient = tk.HORIZONTAL,
-#     resolution = 1,
-#     command=change_vol
-# )
-# vol.pack()
-
-# vol.set(30)
-
-# root.mainloop()
-
-from tkinter import ttk
 import tkinter as tk
-from tkinter.messagebox import showinfo
+from pygame import mixer
 
-
-# root window
 root = tk.Tk()
-root.geometry('300x120')
-root.title('Progressbar Demo')
+root.title("Music Player")
+root.geometry("800x800")
+root.resizable(True, True)
+
+def play_music():
+    mixer.init()
+    audio = mixer.music.load(file_path)
+    mixer.music.play()
+
+def change_vol(_=None):
+    mixer.music.set_volume(vol.get() / 100)
+
+vol = tk.Scale(
+    root,
+    from_ = 0,
+    to = 100,
+    orient = tk.HORIZONTAL,
+    resolution = 1,
+    command=change_vol
+)
+vol.pack()
+
+vol.set(30)
+
+play_music()
+
+root.mainloop()
+
+# from tkinter import ttk
+# import tkinter as tk
+# from tkinter.messagebox import showinfo
 
 
-def update_progress_label():
-    return f"Current Progress: {pb['value']}%"
+# # root window
+# root = tk.Tk()
+# root.geometry('300x120')
+# root.title('Progressbar Demo')
 
 
-def progress():
-    if pb['value'] < 100:
-        pb['value'] += 20
-        value_label['text'] = update_progress_label()
-    else:
-        showinfo(message='The progress completed!')
+# def update_progress_label():
+#     return f"Current Progress: {pb['value']}%"
 
 
-def stop():
-    pb.stop()
-    value_label['text'] = update_progress_label()
+# def progress():
+#     if pb['value'] < 100:
+#         pb['value'] += 20
+#         value_label['text'] = update_progress_label()
+#     else:
+#         showinfo(message='The progress completed!')
+
+
+# def stop():
+#     pb.stop()
+#     value_label['text'] = update_progress_label()
 
 
 # progressbar
-pb = ttk.Progressbar(
-    root,
-    orient='horizontal',
-    mode='determinate',
-    length=280
-)
-# place the progressbar
-pb.grid(column=0, row=0, columnspan=2, padx=10, pady=20)
+# pb = ttk.Progressbar(
+#     root,
+#     orient='horizontal',
+#     mode='determinate',
+#     length=280
+# )
+# # place the progressbar
+# pb.grid(column=0, row=0, columnspan=2, padx=10, pady=20)
 
-# label
-value_label = ttk.Label(root, text=update_progress_label())
-value_label.grid(column=0, row=1, columnspan=2)
+# # label
+# value_label = ttk.Label(root, text=update_progress_label())
+# value_label.grid(column=0, row=1, columnspan=2)
 
-start_button = ttk.Button(
-    root,
-    text='Start',
-    # command=pb.start
-)
-start_button.grid(column=0, row=1, padx=10, pady=10, sticky=tk.E)
+# start_button = ttk.Button(
+#     root,
+#     text='Start',
+#     # command=pb.start
+# )
+# start_button.grid(column=0, row=1, padx=10, pady=10, sticky=tk.E)
 
-pb.start(6*10)
+# pb.start(6*10)
 
-# start button
-start_button = ttk.Button(
-    root,
-    text='Progress',
-    command=progress
-)
-start_button.grid(column=0, row=2, padx=10, pady=10, sticky=tk.E)
+# # start button
+# start_button = ttk.Button(
+#     root,
+#     text='Progress',
+#     command=progress
+# )
+# start_button.grid(column=0, row=2, padx=10, pady=10, sticky=tk.E)
 
-stop_button = ttk.Button(
-    root,
-    text='Stop',
-    command=stop
-)
-stop_button.grid(column=1, row=2, padx=10, pady=10, sticky=tk.W)
+# stop_button = ttk.Button(
+#     root,
+#     text='Stop',
+#     command=stop
+# )
+# stop_button.grid(column=1, row=2, padx=10, pady=10, sticky=tk.W)
 
 
-root.mainloop()
+# root.mainloop()
 
 # from tkinter import *
 # from tkinter.ttk import *
@@ -288,4 +291,4 @@ root.mainloop()
 
 # ws.mainloop()
 
-COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
+# COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']

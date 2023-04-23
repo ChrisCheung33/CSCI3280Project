@@ -164,6 +164,12 @@ def upload_wav():
     add_music(filename, title, album, length, artist, lyrics, album_art)
     return file_path
 
+# get length of a wav file
+def get_length(filename):
+    audio = sf.SoundFile(filename)
+    length = audio.frames / audio.samplerate
+    return length
+
 # get length in mm:ss format
 def get_format_length(length):
     minutes = int(length / 60)

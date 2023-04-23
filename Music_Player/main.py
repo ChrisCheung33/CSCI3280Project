@@ -13,6 +13,10 @@ from io import BytesIO
 from PIL import ImageTk, Image
 import ast
 
+from scipy.io import wavfile
+
+from pygame import mixer
+
 # COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
 COLOR = ['#2C3639', '#3F4E4F', '#A27B5C', '#DCD7C9']
 
@@ -29,7 +33,7 @@ s.theme_use('clam')
 # s.theme_use('classic')
 # s.theme_use('default')
 # s.theme_use('alt')
-s.configure("blue.Horizontal.TProgressbar", foreground=COLOR[2], background=COLOR[2])
+s.configure("blue.Horizontal.TProgressbar", foreground=COLOR[2], background=COLOR[2], troughcolor=COLOR[3],)
 s.configure('Treeview', rowheight=40)
 
 #file for music
@@ -38,15 +42,23 @@ pattern = "*.wav"
 
 play_obj = None
 
+song_length = 0
+
 #action for the play button: to select a song to be play
 def select():
-    sa.stop_all()
+    
+    if play_obj:
+        play_obj.stop()
+        mixer.quit()
 
     # get the selected song from the treeview
     selected_song = tree.focus()
     selected_song_name = tree.item(selected_song)['values'][0]
     selected_song_path = database.get_filename(selected_song_name)
     
+    global song_length
+    song_length = database.get_length(rootpath + selected_song_path)
+
     # playmusic(rootpath + selected_song_path)
     play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
     play_thread.start()
@@ -54,7 +66,8 @@ def select():
     
 #action for the stop button: to clear a song when it is activated
 def stop():
-    sa.stop_all()
+    if play_obj:
+        play_obj.stop()
     label.config(text = "Choose a song to play")
     show_lyrics("")
     show_art("")
@@ -73,13 +86,7 @@ def play_next():
             tree.focus(tree.get_children()[0])
             tree.selection_set(tree.get_children()[0])
 
-    selected_song = tree.focus()
-    selected_song_name = tree.item(selected_song)['values'][0]
-    selected_song_path = database.get_filename(selected_song_name)
-
-    play_obj.stop()
-    play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
-    play_thread.start()
+    select()
 
 
 #action for the prev button: to select the previous song, by minus 1 to the current playing song
@@ -94,24 +101,32 @@ def play_prev():
             tree.focus(tree.get_children()[-1])
             tree.selection_set(tree.get_children()[-1])
 
-    selected_song = tree.focus()
-    selected_song_name = tree.item(selected_song)['values'][0]
-    selected_song_path = database.get_filename(selected_song_name)
+    select()
+    
 
-    play_obj.stop()
-    play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
-    play_thread.start()
+def startpb():
+    pb.start(int(song_length * 10))
 
 #action for the pause button: to pause the song when it is playing and unpuase it  when it is paused
-# def pause_song():
-#     if pauseButton["text"] == "Pause":
-#         play_obj.pause()
-#         pauseButton["text"] = "Play"
-#     else:
-#         play_obj.resume()
-#         pauseButton["text"] = "Pause"
+def pause_song():
+    if pauseButton["text"] == "Pause" and mixer.get_busy():
+        pauseButton['image'] = play_image
+        mixer.pause()
+        pbCurrent = pb['value']
+        pb.stop()
+        pb.config(value=pbCurrent)
+        pauseButton["text"] = "Play"
+    elif pauseButton["text"] == "Play" and mixer.get_busy():
+        pauseButton['image'] = pause_image
+        mixer.unpause()
+        start_thread = threading.Thread(target=startpb, daemon=True)
+        start_thread.start()
+        pauseButton["text"] = "Pause"
 
 def playmusic(file_path):
+    if mixer.get_busy():
+        pause_song()
+
     with open(file_path, 'rb') as wave_file:
         # Check that the file is a WAV file
         riff_chunk_id = wave_file.read(4)
@@ -135,9 +150,10 @@ def playmusic(file_path):
             raise ValueError('File is not in PCM format.')
 
         # Read the data chunk
-        data_chunk_id = wave_file.read(4)
-        data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
-        raw_data = wave_file.read(data_chunk_size)
+        # data_chunk_id = wave_file.read(4)
+        # data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+        # raw_data = wave_file.read(data_chunk_size)
+        sample_rate, raw_data = wavfile.read(file_path)
 
     # Convert raw byte data to NumPy array with proper data type
     if bits_per_sample == 16:
@@ -166,11 +182,20 @@ def playmusic(file_path):
             print("Trying to reshape")
             audio_array = audio_array.reshape(-1, 2)
         except:
-            audio_array = audio_array.reshape(-1, 1)
-            audio_array = np.concatenate((audio_array, audio_array), axis=1)
+            print("Reshaping failed")
+            print(audio_array.shape)
 
     global play_obj
-    play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
+    # play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
+    mixer.init(sample_rate, -bits_per_sample, num_channels, 1024)
+    # load audio_array into mixer
+    play_obj = mixer.Sound(audio_array)
+    play_obj.play()
+    change_vol()
+
+    # playButton['image'] = replay_image
+
+    # play_obj = mixer.music.load(file_path)
     filename = os.path.basename(file_path)
     label.config(text = "Now playing: " + database.get_title(filename))
     show_lyrics(file_path)
@@ -182,8 +207,12 @@ def playmusic(file_path):
 
     pb.start(int(10 * length))
 
-    play_obj.wait_done()
+    # play_obj.wait_done()
+    while(mixer.get_busy()):
+        pass
+
     pb.stop()
+    # playButton['image'] = play_image
 
 
 def add_song():
@@ -293,6 +322,9 @@ def search():
     for index, row in search_result.iterrows():
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
 
+def change_vol(_=None):
+    play_obj.set_volume(vol.get() / 100)
+
 # create a main frame
 mainFrame = tk.Frame(canvas, bg = COLOR[3])
 mainFrame.pack(side = 'right', fill = 'both')
@@ -348,6 +380,29 @@ pb = ttk.Progressbar(
 )
 pb.pack(pady=20, side='top')
 
+# volume frame
+volume_info = tk.Frame(music_info, bg = COLOR[1])
+volume_info.pack(side='top')
+
+# volume label
+vol_label = tk.Label(volume_info, text = 'Volume', bg = COLOR[1], fg = COLOR[3], font = ('poppins',14))
+vol_label.pack(pady = 15, side='left')
+
+vol = tk.Scale(
+    volume_info,
+    length=200,
+    bg=COLOR[1],
+    fg=COLOR[3],
+    troughcolor=COLOR[3],
+    from_ = 0,
+    to = 100,
+    orient = tk.HORIZONTAL,
+    resolution = 1,
+    command=change_vol
+)
+vol.pack(side='left')
+
+vol.set(30)
 
 lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = COLOR[3], fg = COLOR[0], font = ('poppins',14), width = 50, height = 15)
 lyricsText.pack(padx = 15, pady = 15, side = 'bottom')
@@ -368,14 +423,17 @@ stop_image = ImageTk.PhotoImage(Image.open("./images/stop.png").resize(TARGET_SI
 stopButton = tk.Button(top, text = 'Stop', image = stop_image, bg = COLOR[1], borderwidth = 0, command = stop)
 stopButton.pack(pady = 15, side = 'left')
 
+replay_image = ImageTk.PhotoImage(Image.open("./images/replay.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+
 #Button for play song
 play_image = ImageTk.PhotoImage(Image.open("./images/play.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 playButton = tk.Button(top, text = 'Play', image = play_image, bg = COLOR[1], borderwidth = 0, command = select)
 playButton.pack(pady = 15, side = 'left')
 
 #Button for pause song
-# pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = COLOR[1], borderwidth = 0, command = pause_song)
-# pauseButton.pack(pady = 15, side = 'left')
+pause_image = ImageTk.PhotoImage(Image.open("./images/pause.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = COLOR[1], borderwidth = 0, command = pause_song)
+pauseButton.pack(pady = 15, side = 'left')
 
 #Button for next song
 next_image = ImageTk.PhotoImage(Image.open("./images/next.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
