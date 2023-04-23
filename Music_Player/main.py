@@ -13,7 +13,6 @@ from io import BytesIO
 from PIL import ImageTk, Image
 import ast
 import time
-import threading
 import music_visualization
 
 # COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
@@ -41,7 +40,7 @@ pattern = "*.wav"
 
 play_obj = None
 showing_visualize_music = False #Use for turn on/off the visualize_music
-frame = 0
+frame = 0 #show the number of frame, use for gif animation
 
 #action for the play button: to select a song to be play
 def select():
@@ -300,6 +299,52 @@ def search():
     for index, row in search_result.iterrows():
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
  
+# def visualize_music():
+#     global frame
+#     global showing_visualize_music
+    
+#     if(tree.selection()):
+        
+#         selected_song = tree.focus()
+#         selected_song_name = tree.item(selected_song)['values'][0]
+#         selected_song_path = database.get_filename(selected_song_name)
+#         music_length = database.get_length(selected_song_path)
+#         max_frame = 0
+        
+#         if(showing_visualize_music):
+#             try:
+#                 # Check the visualize gif of the song exist
+#                 loaded_img = Image.open("./visualize/{}.gif".format(selected_song_name))
+#             except:
+#                 #Stop the song
+#                 stop()
+#                 #Visualize the song
+#                 music_visualization.create_visualize_music(rootpath + selected_song_path,"./visualize/{}.gif".format(selected_song_name))
+#                 select()
+#             max_frame = loaded_img.n_frames
+#             try:
+#                 loaded_img.seek(frame)
+#             except:
+#                 show_art("")
+#             resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+#             img = ImageTk.PhotoImage(resized_img)
+#             panel.config(image = img)
+#             panel.image = img
+#         else:
+#             try:
+#                 show_art(rootpath + selected_song_path)
+#             except:
+#                 show_art("")
+        
+#         if(frame < max_frame):
+#             frame += 1
+#             print("Max Frame:",max_frame," Current Frame:",frame)
+#             music_length_correction = 0.3 if(music_length>60) else 1
+#             time_interval = music_length/max_frame*2*music_length_correction
+#             print(time_interval)
+#             time.sleep(time_interval)
+#             visualize_music()
+
 def visualize_music():
     global frame
     global showing_visualize_music
@@ -310,42 +355,45 @@ def visualize_music():
         selected_song_name = tree.item(selected_song)['values'][0]
         selected_song_path = database.get_filename(selected_song_name)
         music_length = database.get_length(selected_song_path)
-        print(music_length)
         max_frame = 0
         
         if(showing_visualize_music):
-            print("./visualize/{}.gif".format(selected_song_name))
             try:
+                # Check the visualize gif of the song exist
                 loaded_img = Image.open("./visualize/{}.gif".format(selected_song_name))
             except:
+                #Stop the song
                 stop()
-                music_visualization.create_visualize_music(rootpath + selected_song_path,"./visualize/{}.gif".format(selected_song_name))
-                select()
+                #Visualize the song
+                return
             max_frame = loaded_img.n_frames
-            try:
-                loaded_img.seek(frame)
-            except:
-                show_art("")
-            resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
-            img = ImageTk.PhotoImage(resized_img)
-            panel.config(image = img)
-            panel.image = img
+            music_length_correction = 2 if(music_length<59) else 0.92
+            time_interval = music_length/max_frame*music_length_correction
+            
+            for frame in range(max_frame):
+                print("Max Frame:",max_frame," Current Frame:",frame)
+                try:
+                    loaded_img.seek(frame)
+                except:
+                    show_art("")
+                resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+                img = ImageTk.PhotoImage(resized_img)
+                panel.config(image = img)
+                panel.image = img
+                time.sleep(time_interval)
         else:
             try:
                 show_art(rootpath + selected_song_path)
             except:
                 show_art("")
-        
-        if(frame < max_frame):
-            frame += 1
-            canvas.after(int(music_length/max_frame*2000),visualize_music)
     
 
 def show_visualize_music():
     global showing_visualize_music
     showing_visualize_music = False if(showing_visualize_music) else True
-    print(showing_visualize_music)
-    visualize_music()
+    visualThread = threading.Thread(target=visualize_music)
+    visualThread.start()
+    
 
 # create a sidebar
 # sidebar = tk.Frame(canvas, bg = "#495579")
