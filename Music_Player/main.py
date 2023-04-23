@@ -521,7 +521,7 @@ top.pack(padx = 15, pady = 15, anchor = 'center')
 
 #Button for visualize song
 wave_image = ImageTk.PhotoImage(Image.open("./images/wave.png").resize((32,32), Image.Resampling.LANCZOS))
-button = tk.Button(panel, text='Button', image = wave_image, bg = COLOR[1], borderwidth = 0, command= show_visualize_music)
+button = tk.Button(panel, text='Button', image = wave_image, bg = COLOR[3], borderwidth = 0, command= show_visualize_music)
 button.place(relx=1.0, rely=1.0, anchor='se')
 
 #Button for previous song
