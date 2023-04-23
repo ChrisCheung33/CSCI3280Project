@@ -13,8 +13,9 @@ from io import BytesIO
 from PIL import ImageTk, Image
 import ast
 import time
-import threading
+import threading, wave, pickle, struct
 import music_visualization
+import socket
 
 from scipy.io import wavfile
 
@@ -23,6 +24,11 @@ from pygame import mixer
 from scipy.io import wavfile
 
 from pygame import mixer
+
+host_name = socket.gethostname()
+host_ip = '192.168.1.102'# socket.gethostbyname(host_name)
+print(host_ip)
+port = 9611
 
 # COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
 COLOR = ['#2C3639', '#3F4E4F', '#A27B5C', '#DCD7C9']
@@ -318,26 +324,74 @@ def edit_song():
     saveButton = tk.Button(editFrame, text = "Save", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), lyricsEntry.get(1.0, "end-1c"), editWindow))
     saveButton.grid(row = 4, column = 0, columnspan = 2, padx = 5, pady = 5)
 
-# let the user for network connection
-def network_connection(): 
+def audio_stream():
+    server_socket = socket.socket()
+    server_socket.bind((host_ip, (port-1)))
+    server_socket.listen(5)
+    
+    CHUNK = 1024
+    wf = wave.open("temp.wav", 'rb')
+    p = pyaudio.PyAudio()
+    
+    print('server listening at',(host_ip, (port-1)))
+   
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    input=True,
+                    frames_per_buffer=CHUNK)
 
+    client_socket,addr = server_socket.accept()
+ 
+    data = None
+    while True:
+        if client_socket:
+            while True:
+                data = wf.readframes(CHUNK)
+                a = pickle.dumps(data)
+                message = struct.pack("Q",len(a))+a
+                client_socket.sendall(message)
+
+# let the user for network connection
+def network_connection():
     # create a new window
     NetworkConnectionWindow = tk.Toplevel()
     NetworkConnectionWindow.title("Network Connection")
-    NetworkConnectionWindow.geometry("400x200")
+    NetworkConnectionWindow.geometry("400x600")
     NetworkConnectionWindow.resizable(False, False)
     NetworkConnectionWindow.configure(bg = COLOR[1])
     # create a frame
-    NetworkConnectionFrame = tk.Frame(NetworkConnectionWindow, bg = COLOR[1])
-    NetworkConnectionFrame.pack(padx = 15, pady = 15, anchor = 'center')
-    # create a label for the name of the song
-    IPAddressLabel = tk.Label(NetworkConnectionFrame, text = "IP Address", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
-    IPAddressLabel.grid(row = 0, column = 0, padx = 5, pady = 5)
-    # create an entry for the name of the song
-    nameEntry = tk.Entry(NetworkConnectionWindow, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
-    nameEntry.grid(row = 0, column = 1, padx = 5, pady = 5)
-    #nameEntry.insert(0, name)
+    network_frame = tk.Frame(NetworkConnectionWindow, bg=COLOR[1])
+    network_frame.pack(padx=15, pady=15, anchor='center')
 
+    # create a label for the IP address input field
+    ip_address_label = tk.Label(network_frame, text="IP Address", bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
+    ip_address_label.grid(row=0, column=0, padx=5, pady=5)
+
+    # create an entry for the IP address input field
+    ip_address_entry = tk.Entry(network_frame, width=30, bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
+    ip_address_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    def connect_to_target():
+        # read IP address of the local PC
+        my_ip_address = socket.gethostbyname(socket.gethostname())
+        # read target IP address
+        target_ip_address = ip_address_entry.get()
+        # establish TCP connection to target PC
+        try:
+            target_port = 9610 # use the port number used by the server code
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((target_ip_address, target_port))
+            print("Connected to target PC at IP address:", target_ip_address)
+            # send data to target PC
+            # ...
+            s.close()
+        except socket.error as e:
+            print("Error connecting to target PC:", e)
+
+    # create a button for applying the network connection
+    apply_button = tk.Button(network_frame, text='Apply', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=connect_to_target)
+    apply_button.grid(row = 4, column = 0, columnspan = 2, padx = 5, pady = 5)
 
 def save_changes(filename, title, artist, album, lyrics, editWindow):
     # get the selected song
