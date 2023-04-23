@@ -70,7 +70,7 @@ def select():
     selected_song_path = database.get_filename(selected_song_name)
     
     global song_length
-    song_length = database.get_length(rootpath + selected_song_path)
+    song_length = database.get_length(selected_song_path)
 
     # playmusic(rootpath + selected_song_path)
     play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
@@ -178,7 +178,7 @@ def playmusic(file_path):
         audio = sf.SoundFile(file_path)
 
         keys = list(audio.copy_metadata().keys())
-        print(keys)
+        # print(keys)
         sf.write(file_path, data, sample_rate, subtype='PCM_16')
 
         playmusic(file_path)
@@ -214,9 +214,7 @@ def playmusic(file_path):
     frame = 0
 
     # get length of the song
-    # data, samplerate = sf.read(file_path)
-    # length = len(data) / samplerate
-    length = database.get_length(file_path)
+    length = database.get_length(filename)
 
     pb.start(int(10 * length))
 
@@ -353,6 +351,12 @@ def search():
     search_result = database.search(search)
     # add the songs to the treeview
     for index, row in search_result.iterrows():
+        if row['artist'] == 'none':
+            row['artist'] = 'None'
+
+        if row['album'] == 'none':
+            row['album'] = 'None'
+            
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
  
 def visualize_music():
@@ -364,7 +368,7 @@ def visualize_music():
         selected_song = tree.focus()
         selected_song_name = tree.item(selected_song)['values'][0]
         selected_song_path = database.get_filename(selected_song_name)
-        music_length = database.get_length(rootpath + selected_song_path)
+        music_length = database.get_length(selected_song_path)
         print(music_length)
         max_frame = 0
         
@@ -552,16 +556,20 @@ def read_file_to_treeview(rootpath, pattern):
             filename_list.append(os.path.basename(filename))
 
     filename_list.sort()
-    print(filename_list)
+    # print(filename_list)
     for filename in filename_list:
         # get the name of the song
-        name = database.music_df.loc[database.music_df['filename'] == filename, 'title'].values[0]
+        name = database.get_title(filename)
         # get the artist of the song
-        artist = database.music_df.loc[database.music_df['filename'] == filename, 'artist'].values[0]
+        artist = database.get_artist(filename)
+        if artist == "none":
+            artist = "None"
         # get the album of the song
-        album = database.music_df.loc[database.music_df['filename'] == filename, 'album'].values[0]
+        album = database.get_album(filename)
+        if album == "none":
+            album = "None"
         # get the time of the song
-        time = database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0]
+        time = database.get_length(filename)
         # insert the song in the treeview
         tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
 
@@ -574,7 +582,7 @@ def show_lyrics(song=""):
         return
     # get filename without the extension
     song = os.path.basename(song)
-    print(song)
+    # print(song)
     # get the lyrics of the song
     lyrics = database.music_df.loc[database.music_df['filename'] == song, 'lyrics'].values[0]
     # show the lyrics in the text box

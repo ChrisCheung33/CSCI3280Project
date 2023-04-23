@@ -18,10 +18,10 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         title = os.path.splitext(title)[0]
 
     if album == None or album == "":
-        album = "Unknown"
+        album = "none"
     
     if artist == None or artist == "":
-        artist = "Unknown"
+        artist = "none"
 
     if not music_df[music_df['title'] == title].empty:
         print(f"A song with the title '{title}' already exists in the database.")
@@ -56,10 +56,10 @@ def update_music(filename, title, album, artist):
         title = os.path.splitext(title)[0]
 
     if album == None or album == "":
-        album = "Unknown"
+        album = "none"
     
     if artist == None or artist == "":
-        artist = "Unknown"
+        artist = "none"
 
     music_info_row = {'filename': filename,
                         'album': album,
@@ -165,10 +165,10 @@ def upload_wav():
     return file_path
 
 # get length of a wav file
-def get_length(filename):
-    audio = sf.SoundFile(filename)
-    length = audio.frames / audio.samplerate
-    return length
+# def get_length(filename):
+#     audio = sf.SoundFile(filename)
+#     length = audio.frames / audio.samplerate
+#     return length
 
 # get length in mm:ss format
 def get_format_length(length):
@@ -207,10 +207,20 @@ def get_title(filename):
     title = music_df[music_df['filename'] == filename]['title'].values[0]
     return title
 
-# def get_length(filename):
-#     global music_df
-#     length = music_df[music_df['filename'] == filename]['length'].values[0]
-#     return length
+def get_artist(filename):
+    global music_df
+    artist = music_df[music_df['filename'] == filename]['artist'].values[0]
+    return artist
+
+def get_album(filename):
+    global music_df
+    album = music_df[music_df['filename'] == filename]['album'].values[0]
+    return album
+
+def get_length(filename):
+    global music_df
+    length = music_df[music_df['filename'] == filename]['length'].values[0]
+    return length
 
 # Example usage
 
