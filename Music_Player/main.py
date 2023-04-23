@@ -11,6 +11,9 @@ import soundfile as sf
 from io import BytesIO
 from PIL import ImageTk, Image
 import ast
+import time
+import threading
+import music_visualization
 
 #design of the UI of the music player
 canvas = tk.Tk()
@@ -33,6 +36,8 @@ pattern = "*.wav"
 # edit_image = ImageTk.PhotoImage(file = "./images/edit.png")
 
 play_obj = None
+showing_visualize_music = False #Use for turn on/off the visualize_music
+frame = 0
 
 #action for the play button: to select a song to be play
 def select():
@@ -162,11 +167,13 @@ def playmusic(file_path):
             audio_array = np.concatenate((audio_array, audio_array), axis=1)
 
     global play_obj
+    global frame
     play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
     filename = os.path.basename(file_path)
     label.config(text = "Now playing: " + database.get_title(filename))
     show_lyrics(file_path)
     show_art(file_path)
+    frame = 0
 
 
 def add_song():
@@ -276,6 +283,52 @@ def search():
     for index, row in search_result.iterrows():
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
  
+def visualize_music():
+    global frame
+    global showing_visualize_music
+    
+    if(tree.selection()):
+        
+        selected_song = tree.focus()
+        selected_song_name = tree.item(selected_song)['values'][0]
+        selected_song_path = database.get_filename(selected_song_name)
+        music_length = database.get_length(selected_song_path)
+        print(music_length)
+        max_frame = 0
+        
+        if(showing_visualize_music):
+            print("./visualize/{}.gif".format(selected_song_name))
+            try:
+                loaded_img = Image.open("./visualize/{}.gif".format(selected_song_name))
+            except:
+                stop()
+                music_visualization.create_visualize_music(rootpath + selected_song_path,"./visualize/{}.gif".format(selected_song_name))
+                select()
+            max_frame = loaded_img.n_frames
+            try:
+                loaded_img.seek(frame)
+            except:
+                show_art("")
+            resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+            img = ImageTk.PhotoImage(resized_img)
+            panel.config(image = img)
+            panel.image = img
+        else:
+            try:
+                show_art(rootpath + selected_song_path)
+            except:
+                show_art("")
+        
+        if(frame < max_frame):
+            frame += 1
+            canvas.after(int(music_length/max_frame*2000),visualize_music)
+    
+
+def show_visualize_music():
+    global showing_visualize_music
+    showing_visualize_music = False if(showing_visualize_music) else True
+    print(showing_visualize_music)
+    visualize_music()
 
 # create a sidebar
 # sidebar = tk.Frame(canvas, bg = "#495579")
@@ -333,6 +386,11 @@ top.pack(padx = 15, pady = 15, anchor = 'center')
 
 
 TARGET_SIZE_SMALL = (64, 64)
+
+#Button for visualize song
+wave_image = ImageTk.PhotoImage(Image.open("./images/wave.png").resize((32,32), Image.Resampling.LANCZOS))
+button = tk.Button(panel, text='Button', image = wave_image, bg = '#495579', borderwidth = 0, command= show_visualize_music)
+button.place(relx=1.0, rely=1.0, anchor='se')
 
 #Button for previous song
 prev_image = ImageTk.PhotoImage(Image.open("./images/prev.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
