@@ -348,11 +348,32 @@ def save_changes(filename, title, artist, album, lyrics, editWindow):
 
     length = database.get_format_length(database.get_length(filename))
     
+    if artist == "none":
+        artist = "None"
+
+    if album == "none":
+        album = "None"
+
     # update the treeview
     tree.item(selected, values = (title, artist, album, length))
 
     # close the window
     editWindow.destroy()
+
+# remove the selected song from the database, the treeview and from the folder
+def remove_song():
+    # get the selected song
+    selected = tree.selection()
+    # get the filename of the song
+    filename = tree.item(selected, 'values')[0]
+    # remove the song from the database
+    database.remove_music(filename)
+    # remove the song from the treeview
+    tree.delete(selected)
+    # remove the song from the folder
+    os.remove(rootpath + filename)
+
+    print(f"{filename} removed")
 
 # search for songs in the database and show them in the treeview
 # the search is case insensitive
@@ -422,10 +443,6 @@ def show_visualize_music():
     print(showing_visualize_music)
     visualize_music()
 
-# create a sidebar
-# sidebar = tk.Frame(canvas, bg = "#495579")
-# sidebar.pack(side = 'left', fill = 'both')
-
 def change_vol(_=None):
     if play_obj:
         play_obj.set_volume(vol.get() / 100)
@@ -473,10 +490,16 @@ edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SI
 editButton = tk.Button(manageFrame, text = 'Edit', image = edit_image, bg = COLOR[3], borderwidth = 0, command = edit_song)
 editButton.pack(pady = 15, side = 'left')
 
+# Button for remove song
+remove_image = ImageTk.PhotoImage(Image.open("./images/remove.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+removeButton = tk.Button(manageFrame, text = 'Remove', image = remove_image, bg = COLOR[3], borderwidth = 0, command = remove_song)
+removeButton.pack(pady = 15, side = 'left')
+
 # Button for network_connection
 network_connection_image = ImageTk.PhotoImage(Image.open("./images/network_connection.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 editButton = tk.Button(manageFrame, text = 'Edit', image = network_connection_image, bg = COLOR[3], borderwidth = 0, command = network_connection)
 editButton.pack(pady = 15, side = 'left')
+
 
 music_info = tk.Frame(canvas, bg = COLOR[1], width=800)
 music_info.pack(padx = 15, pady = 15, anchor = 'center', expand=True, fill='both')
