@@ -227,6 +227,7 @@ def playmusic(file_path):
 
     pb.stop()
     # playButton['image'] = play_image
+    play_next()
 
 
 def add_song():
@@ -268,14 +269,16 @@ def edit_song():
     # get the filename of the song
     filename = database.get_filename(name)
     # get the artist of the song
-    artist = database.music_df.loc[database.music_df['filename'] == filename, 'artist'].values[0]
+    artist = database.get_artist(filename)
     # get the album of the song
-    album = database.music_df.loc[database.music_df['filename'] == filename, 'album'].values[0]
+    album = database.get_album(filename)
+    # get the lyrics of the song
+    lyrics = database.get_lyrics(filename)
     
     # create a new window
     editWindow = tk.Toplevel()
     editWindow.title("Edit")
-    editWindow.geometry("400x200")
+    editWindow.geometry("400x600")
     editWindow.resizable(False, False)
     editWindow.configure(bg = COLOR[1])
     # create a frame
@@ -290,6 +293,10 @@ def edit_song():
     # create a label for the album of the song
     albumLabel = tk.Label(editFrame, text = "Album", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
     albumLabel.grid(row = 2, column = 0, padx = 5, pady = 5)
+    # create a label for the lyrics of the song
+    lyricsLabel = tk.Label(editFrame, text = "Lyrics", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    lyricsLabel.grid(row = 3, column = 0, padx = 5, pady = 5)
+    
     # create an entry for the name of the song
     nameEntry = tk.Entry(editFrame, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
     nameEntry.grid(row = 0, column = 1, padx = 5, pady = 5)
@@ -302,10 +309,14 @@ def edit_song():
     albumEntry = tk.Entry(editFrame, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
     albumEntry.grid(row = 2, column = 1, padx = 5, pady = 5)
     albumEntry.insert(0, album)
+    # create an entry for the lyrics of the song
+    lyricsEntry = tk.Text(editFrame, width = 30, height = 12, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    lyricsEntry.grid(row = 3, column = 1, padx = 5, pady = 5)
+    lyricsEntry.insert(tk.END, lyrics)
 
     # create a button for save the changes
-    saveButton = tk.Button(editFrame, text = "Save", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), editWindow))
-    saveButton.grid(row = 3, column = 0, columnspan = 2, padx = 5, pady = 5)
+    saveButton = tk.Button(editFrame, text = "Save", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), lyricsEntry.get(1.0, "end-1c"), editWindow))
+    saveButton.grid(row = 4, column = 0, columnspan = 2, padx = 5, pady = 5)
 
 # let the user for network connection
 def network_connection(): 
@@ -328,14 +339,14 @@ def network_connection():
     #nameEntry.insert(0, name)
 
 
-def save_changes(filename, title, artist, album, editWindow):
+def save_changes(filename, title, artist, album, lyrics, editWindow):
     # get the selected song
     selected = tree.selection()
     
     # update the database
-    database.update_music(filename, title, album, artist)
+    database.update_music(filename, title, album, artist, lyrics)
 
-    length = database.get_format_length(database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0])
+    length = database.get_format_length(database.get_length(filename))
     
     # update the treeview
     tree.item(selected, values = (title, artist, album, length))
