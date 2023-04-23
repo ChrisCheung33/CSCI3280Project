@@ -363,9 +363,13 @@ def save_changes(filename, title, artist, album, lyrics, editWindow):
 def remove_song():
     # get the selected song
     selected = tree.selection()
+    if all(selected):
+        return
     # get the filename of the song
     filename = tree.item(selected, 'values')[0]
     # remove the song from the database
+    if filename == "" or filename is None:
+        return
     database.remove_music(filename)
     # remove the song from the treeview
     tree.delete(selected)
