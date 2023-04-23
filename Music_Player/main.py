@@ -6,7 +6,7 @@ import fnmatch
 import struct
 import os
 import numpy as np
-import simpleaudio as sa
+# import simpleaudio as sa
 import database
 import soundfile as sf
 from io import BytesIO
@@ -15,8 +15,19 @@ import ast
 import time
 import music_visualization
 
+from scipy.io import wavfile
+
+from pygame import mixer
+
+from scipy.io import wavfile
+
+from pygame import mixer
+
 # COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
 COLOR = ['#2C3639', '#3F4E4F', '#A27B5C', '#DCD7C9']
+
+TARGET_SIZE = (256, 256)
+TARGET_SIZE_SMALL = (50, 50)
 
 #design of the UI of the music player
 canvas = tk.Tk()
@@ -31,7 +42,7 @@ s.theme_use('clam')
 # s.theme_use('classic')
 # s.theme_use('default')
 # s.theme_use('alt')
-s.configure("blue.Horizontal.TProgressbar", foreground=COLOR[2], background=COLOR[2])
+s.configure("blue.Horizontal.TProgressbar", foreground=COLOR[2], background=COLOR[2], troughcolor=COLOR[3],)
 s.configure('Treeview', rowheight=40)
 
 #file for music
@@ -42,15 +53,27 @@ play_obj = None
 showing_visualize_music = False #Use for turn on/off the visualize_music
 frame = 0 #show the number of frame, use for gif animation
 
+song_length = 0
+
 #action for the play button: to select a song to be play
 def select():
-    sa.stop_all()
+    
+    if play_obj and mixer is not None:
+        play_obj.stop()
+        mixer.quit()
 
     # get the selected song from the treeview
     selected_song = tree.focus()
+    if selected_song == "":
+        print("No song selected")
+        mixer.init()
+        return
     selected_song_name = tree.item(selected_song)['values'][0]
     selected_song_path = database.get_filename(selected_song_name)
     
+    global song_length
+    song_length = database.get_length(selected_song_path)
+
     # playmusic(rootpath + selected_song_path)
     play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
     play_thread.start()
@@ -58,7 +81,8 @@ def select():
     
 #action for the stop button: to clear a song when it is activated
 def stop():
-    sa.stop_all()
+    if play_obj:
+        play_obj.stop()
     label.config(text = "Choose a song to play")
     show_lyrics("")
     show_art("")
@@ -77,13 +101,7 @@ def play_next():
             tree.focus(tree.get_children()[0])
             tree.selection_set(tree.get_children()[0])
 
-    selected_song = tree.focus()
-    selected_song_name = tree.item(selected_song)['values'][0]
-    selected_song_path = database.get_filename(selected_song_name)
-
-    play_obj.stop()
-    play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
-    play_thread.start()
+    select()
 
 
 #action for the prev button: to select the previous song, by minus 1 to the current playing song
@@ -98,24 +116,32 @@ def play_prev():
             tree.focus(tree.get_children()[-1])
             tree.selection_set(tree.get_children()[-1])
 
-    selected_song = tree.focus()
-    selected_song_name = tree.item(selected_song)['values'][0]
-    selected_song_path = database.get_filename(selected_song_name)
+    select()
+    
 
-    play_obj.stop()
-    play_thread = threading.Thread(target=playmusic, args=(rootpath + selected_song_path,), daemon=True)
-    play_thread.start()
+def startpb():
+    pb.start(int(song_length * 10))
 
 #action for the pause button: to pause the song when it is playing and unpuase it  when it is paused
-# def pause_song():
-#     if pauseButton["text"] == "Pause":
-#         play_obj.pause()
-#         pauseButton["text"] = "Play"
-#     else:
-#         play_obj.resume()
-#         pauseButton["text"] = "Pause"
+def pause_song():
+    if pauseButton["text"] == "Pause" and mixer.get_busy():
+        pauseButton['image'] = play_image
+        mixer.pause()
+        pbCurrent = pb['value']
+        pb.stop()
+        pb.config(value=pbCurrent)
+        pauseButton["text"] = "Play"
+    elif pauseButton["text"] == "Play" and mixer.get_busy():
+        pauseButton['image'] = pause_image
+        mixer.unpause()
+        start_thread = threading.Thread(target=startpb, daemon=True)
+        start_thread.start()
+        pauseButton["text"] = "Pause"
 
 def playmusic(file_path):
+    if mixer.get_busy():
+        pause_song()
+
     with open(file_path, 'rb') as wave_file:
         # Check that the file is a WAV file
         riff_chunk_id = wave_file.read(4)
@@ -139,9 +165,10 @@ def playmusic(file_path):
             raise ValueError('File is not in PCM format.')
 
         # Read the data chunk
-        data_chunk_id = wave_file.read(4)
-        data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
-        raw_data = wave_file.read(data_chunk_size)
+        # data_chunk_id = wave_file.read(4)
+        # data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+        # raw_data = wave_file.read(data_chunk_size)
+        sample_rate, raw_data = wavfile.read(file_path)
 
     # Convert raw byte data to NumPy array with proper data type
     if bits_per_sample == 16:
@@ -153,7 +180,7 @@ def playmusic(file_path):
         audio = sf.SoundFile(file_path)
 
         keys = list(audio.copy_metadata().keys())
-        print(keys)
+        # print(keys)
         sf.write(file_path, data, sample_rate, subtype='PCM_16')
 
         playmusic(file_path)
@@ -170,32 +197,44 @@ def playmusic(file_path):
             print("Trying to reshape")
             audio_array = audio_array.reshape(-1, 2)
         except:
-            audio_array = audio_array.reshape(-1, 1)
-            audio_array = np.concatenate((audio_array, audio_array), axis=1)
+            print("Reshaping failed")
+            print(audio_array.shape)
 
     global play_obj
-    global frame
-    play_obj = sa.play_buffer(audio_array, num_channels, 2, sample_rate)
+    mixer.init(sample_rate, -bits_per_sample, num_channels, 1024)
+    # load audio_array into mixer
+    play_obj = mixer.Sound(audio_array)
+    play_obj.play()
+    change_vol()
+
     filename = os.path.basename(file_path)
     label.config(text = "Now playing: " + database.get_title(filename))
     show_lyrics(file_path)
     show_art(file_path)
+    
+    global frame
     frame = 0
 
     # get length of the song
-    data, samplerate = sf.read(file_path)
-    length = len(data) / samplerate
+    length = database.get_length(filename)
 
     pb.start(int(10 * length))
 
-    play_obj.wait_done()
+    # play_obj.wait_done()
+    while(mixer.get_busy()):
+        pass
+
     pb.stop()
+    # playButton['image'] = play_image
+    play_next()
 
 
 def add_song():
     database.load_from_csv(database.database_path)
     song = database.upload_wav()
-    print("Song: " + song)
+    # print("Song: " + song)
+    if song == "":
+        return
     destination_file = save_wav(song)
     # remove the music/ part of the path
     destination_file = destination_file[6:]
@@ -229,14 +268,16 @@ def edit_song():
     # get the filename of the song
     filename = database.get_filename(name)
     # get the artist of the song
-    artist = database.music_df.loc[database.music_df['filename'] == filename, 'artist'].values[0]
+    artist = database.get_artist(filename)
     # get the album of the song
-    album = database.music_df.loc[database.music_df['filename'] == filename, 'album'].values[0]
+    album = database.get_album(filename)
+    # get the lyrics of the song
+    lyrics = database.get_lyrics(filename)
     
     # create a new window
     editWindow = tk.Toplevel()
     editWindow.title("Edit")
-    editWindow.geometry("400x200")
+    editWindow.geometry("400x600")
     editWindow.resizable(False, False)
     editWindow.configure(bg = COLOR[1])
     # create a frame
@@ -251,6 +292,10 @@ def edit_song():
     # create a label for the album of the song
     albumLabel = tk.Label(editFrame, text = "Album", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
     albumLabel.grid(row = 2, column = 0, padx = 5, pady = 5)
+    # create a label for the lyrics of the song
+    lyricsLabel = tk.Label(editFrame, text = "Lyrics", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    lyricsLabel.grid(row = 3, column = 0, padx = 5, pady = 5)
+    
     # create an entry for the name of the song
     nameEntry = tk.Entry(editFrame, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
     nameEntry.grid(row = 0, column = 1, padx = 5, pady = 5)
@@ -263,26 +308,71 @@ def edit_song():
     albumEntry = tk.Entry(editFrame, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
     albumEntry.grid(row = 2, column = 1, padx = 5, pady = 5)
     albumEntry.insert(0, album)
+    # create an entry for the lyrics of the song
+    lyricsEntry = tk.Text(editFrame, width = 30, height = 12, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    lyricsEntry.grid(row = 3, column = 1, padx = 5, pady = 5)
+    lyricsEntry.insert(tk.END, lyrics)
 
     # create a button for save the changes
-    saveButton = tk.Button(editFrame, text = "Save", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), editWindow))
-    saveButton.grid(row = 3, column = 0, columnspan = 2, padx = 5, pady = 5)
+    saveButton = tk.Button(editFrame, text = "Save", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), lyricsEntry.get(1.0, "end-1c"), editWindow))
+    saveButton.grid(row = 4, column = 0, columnspan = 2, padx = 5, pady = 5)
+
+# let the user for network connection
+def network_connection(): 
+
+    # create a new window
+    NetworkConnectionWindow = tk.Toplevel()
+    NetworkConnectionWindow.title("Network Connection")
+    NetworkConnectionWindow.geometry("400x200")
+    NetworkConnectionWindow.resizable(False, False)
+    NetworkConnectionWindow.configure(bg = COLOR[1])
+    # create a frame
+    NetworkConnectionFrame = tk.Frame(NetworkConnectionWindow, bg = COLOR[1])
+    NetworkConnectionFrame.pack(padx = 15, pady = 15, anchor = 'center')
+    # create a label for the name of the song
+    IPAddressLabel = tk.Label(NetworkConnectionFrame, text = "IP Address", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    IPAddressLabel.grid(row = 0, column = 0, padx = 5, pady = 5)
+    # create an entry for the name of the song
+    nameEntry = tk.Entry(NetworkConnectionWindow, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    nameEntry.grid(row = 0, column = 1, padx = 5, pady = 5)
+    #nameEntry.insert(0, name)
 
 
-def save_changes(filename, title, artist, album, editWindow):
+def save_changes(filename, title, artist, album, lyrics, editWindow):
     # get the selected song
     selected = tree.selection()
     
     # update the database
-    database.update_music(filename, title, album, artist)
+    database.update_music(filename, title, album, artist, lyrics)
 
-    length = database.get_format_length(database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0])
+    length = database.get_format_length(database.get_length(filename))
     
+    if artist == "none":
+        artist = "None"
+
+    if album == "none":
+        album = "None"
+
     # update the treeview
     tree.item(selected, values = (title, artist, album, length))
 
     # close the window
     editWindow.destroy()
+
+# remove the selected song from the database, the treeview and from the folder
+def remove_song():
+    # get the selected song
+    selected = tree.selection()
+    # get the filename of the song
+    filename = tree.item(selected, 'values')[0]
+    # remove the song from the database
+    database.remove_music(filename)
+    # remove the song from the treeview
+    tree.delete(selected)
+    # remove the song from the folder
+    os.remove(rootpath + filename)
+
+    print(f"{filename} removed")
 
 # search for songs in the database and show them in the treeview
 # the search is case insensitive
@@ -297,6 +387,12 @@ def search():
     search_result = database.search(search)
     # add the songs to the treeview
     for index, row in search_result.iterrows():
+        if row['artist'] == 'none':
+            row['artist'] = 'None'
+
+        if row['album'] == 'none':
+            row['album'] = 'None'
+            
         tree.insert("", "end", values = (row['title'], row['artist'], row['album'], database.get_format_length(row['length'])))
  
 # def visualize_music():
@@ -395,9 +491,9 @@ def show_visualize_music():
     visualThread.start()
     
 
-# create a sidebar
-# sidebar = tk.Frame(canvas, bg = "#495579")
-# sidebar.pack(side = 'left', fill = 'both')
+def change_vol(_=None):
+    if play_obj:
+        play_obj.set_volume(vol.get() / 100)
 
 # create a main frame
 mainFrame = tk.Frame(canvas, bg = COLOR[3])
@@ -413,10 +509,10 @@ searchLabel.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 searchBar = tk.Entry(searchFrame, width = 60, bg = COLOR[3], fg = COLOR[0], font = ("poppins", 14))
 searchBar.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
-enterButton = tk.Button(searchFrame, text = "Enter", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = search)
+enterButton = tk.Button(searchFrame, text = "Enter", bg = COLOR[3], fg = COLOR[0], font = ("poppins", 14), command = search)
 enterButton.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
-tree = ttk.Treeview(mainFrame, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "20")
+tree = ttk.Treeview(mainFrame, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "12")
 tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
 tree.heading("Album", text = "Album")
@@ -429,10 +525,33 @@ tree.pack(padx = 15, pady = 15)
 ttk.Style().configure("Treeview", background=COLOR[3], 
 foreground=COLOR[0], fieldbackground=COLOR[1])
 
+manageFrame = tk.Frame(mainFrame, bg = COLOR[3])
+manageFrame.pack(padx = 15, pady = 15, anchor = 'e')
+
+# Button for add song
+add_image = ImageTk.PhotoImage(Image.open("./images/add.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+addButton = tk.Button(manageFrame, text = 'Add', image = add_image, bg = COLOR[3], borderwidth = 0, command = add_song)
+addButton.pack(pady = 15, side = 'left')
+
+# Button for edit song
+edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+editButton = tk.Button(manageFrame, text = 'Edit', image = edit_image, bg = COLOR[3], borderwidth = 0, command = edit_song)
+editButton.pack(pady = 15, side = 'left')
+
+# Button for remove song
+remove_image = ImageTk.PhotoImage(Image.open("./images/remove.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+removeButton = tk.Button(manageFrame, text = 'Remove', image = remove_image, bg = COLOR[3], borderwidth = 0, command = remove_song)
+removeButton.pack(pady = 15, side = 'left')
+
+# Button for network_connection
+network_connection_image = ImageTk.PhotoImage(Image.open("./images/network_connection.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+editButton = tk.Button(manageFrame, text = 'Edit', image = network_connection_image, bg = COLOR[3], borderwidth = 0, command = network_connection)
+editButton.pack(pady = 15, side = 'left')
+
+
 music_info = tk.Frame(canvas, bg = COLOR[1], width=800)
 music_info.pack(padx = 15, pady = 15, anchor = 'center', expand=True, fill='both')
 
-TARGET_SIZE = (256, 256)
 loaded_img = Image.open("./images/art.jpeg")
 resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
@@ -440,7 +559,7 @@ panel = tk.Label(music_info, image = img, bg=COLOR[1])
 panel.image = img
 panel.pack(side = "top")
 
-label = tk.Label(music_info, text = 'Choose a song to play', bg = COLOR[1], fg = COLOR[3], font = ('poppins',14))
+label = tk.Label(music_info, text = 'Choose a song to play', bg = COLOR[1], fg = COLOR[3], font = ('poppins',24))
 label.pack(pady = 15, side='top')
 
 # progressbar
@@ -454,19 +573,37 @@ pb = ttk.Progressbar(
 )
 pb.pack(pady=20, side='top')
 
+# volume frame
+volume_info = tk.Frame(music_info, bg = COLOR[1])
+volume_info.pack(side='top')
 
-lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = COLOR[3], fg = COLOR[0], font = ('poppins',14), width = 50, height = 15)
-lyricsText.pack(padx = 15, pady = 15, side = 'bottom')
+# volume label
+vol_label = tk.Label(volume_info, text = 'Volume', bg = COLOR[1], fg = COLOR[3], font = ('poppins',14))
+vol_label.pack(pady = 15, side='left')
+
+vol = tk.Scale(
+    volume_info,
+    length=200,
+    bg=COLOR[1],
+    fg=COLOR[3],
+    troughcolor=COLOR[3],
+    showvalue=0,
+    from_ = 0,
+    to = 100,
+    orient = tk.HORIZONTAL,
+    resolution = 1,
+    command=change_vol
+)
+vol.pack(side='left')
+
+vol.set(30)
 
 top = tk.Frame(music_info, bg = COLOR[1])
 top.pack(padx = 15, pady = 15, anchor = 'center')
 
-
-TARGET_SIZE_SMALL = (64, 64)
-
 #Button for visualize song
 wave_image = ImageTk.PhotoImage(Image.open("./images/wave.png").resize((32,32), Image.Resampling.LANCZOS))
-button = tk.Button(panel, text='Button', image = wave_image, bg = '#495579', borderwidth = 0, command= show_visualize_music)
+button = tk.Button(panel, text='Button', image = wave_image, bg = COLOR[3], borderwidth = 0, command= show_visualize_music)
 button.place(relx=1.0, rely=1.0, anchor='se')
 
 #Button for previous song
@@ -479,29 +616,26 @@ stop_image = ImageTk.PhotoImage(Image.open("./images/stop.png").resize(TARGET_SI
 stopButton = tk.Button(top, text = 'Stop', image = stop_image, bg = COLOR[1], borderwidth = 0, command = stop)
 stopButton.pack(pady = 15, side = 'left')
 
+replay_image = ImageTk.PhotoImage(Image.open("./images/replay.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+
 #Button for play song
 play_image = ImageTk.PhotoImage(Image.open("./images/play.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 playButton = tk.Button(top, text = 'Play', image = play_image, bg = COLOR[1], borderwidth = 0, command = select)
 playButton.pack(pady = 15, side = 'left')
 
 #Button for pause song
-# pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = COLOR[1], borderwidth = 0, command = pause_song)
-# pauseButton.pack(pady = 15, side = 'left')
+pause_image = ImageTk.PhotoImage(Image.open("./images/pause.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+pauseButton = tk.Button(top, text = 'Pause', image = pause_image, bg = COLOR[1], borderwidth = 0, command = pause_song)
+pauseButton.pack(pady = 15, side = 'left')
 
 #Button for next song
 next_image = ImageTk.PhotoImage(Image.open("./images/next.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 nextButton = tk.Button(top, text = 'Next', image = next_image, bg = COLOR[1], borderwidth = 0, command = play_next)
 nextButton.pack(pady = 15, side = 'left')
 
-# Button for add song
-add_image = ImageTk.PhotoImage(Image.open("./images/add.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-addButton = tk.Button(top, text = 'Add', image = add_image, bg = COLOR[1], borderwidth = 0, command = add_song)
-addButton.pack(pady = 15, side = 'left')
+lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = COLOR[3], fg = COLOR[0], font = ('poppins',14), width = 50, height = 12)
+lyricsText.pack(padx = 15, pady = 15, side = 'top')
 
-# Button for edit song
-edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-editButton = tk.Button(top, text = 'Edit', image = edit_image, bg = COLOR[1], borderwidth = 0, command = edit_song)
-editButton.pack(pady = 15, side = 'left')
 
 def read_file_to_treeview(rootpath, pattern):
     filename_list = []
@@ -510,16 +644,20 @@ def read_file_to_treeview(rootpath, pattern):
             filename_list.append(os.path.basename(filename))
 
     filename_list.sort()
-    print(filename_list)
+    # print(filename_list)
     for filename in filename_list:
         # get the name of the song
-        name = database.music_df.loc[database.music_df['filename'] == filename, 'title'].values[0]
+        name = database.get_title(filename)
         # get the artist of the song
-        artist = database.music_df.loc[database.music_df['filename'] == filename, 'artist'].values[0]
+        artist = database.get_artist(filename)
+        if artist == "none":
+            artist = "None"
         # get the album of the song
-        album = database.music_df.loc[database.music_df['filename'] == filename, 'album'].values[0]
+        album = database.get_album(filename)
+        if album == "none":
+            album = "None"
         # get the time of the song
-        time = database.music_df.loc[database.music_df['filename'] == filename, 'length'].values[0]
+        time = database.get_length(filename)
         # insert the song in the treeview
         tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
 
@@ -532,9 +670,9 @@ def show_lyrics(song=""):
         return
     # get filename without the extension
     song = os.path.basename(song)
-    print(song)
+    # print(song)
     # get the lyrics of the song
-    lyrics = database.music_df.loc[database.music_df['filename'] == song, 'lyrics'].values[0]
+    lyrics = database.get_lyrics(song)
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
@@ -545,7 +683,7 @@ def show_art(file_path):
 
         song = os.path.basename(file_path)
         try:
-            album_art_data = database.music_df.loc[database.music_df['filename'] == song, 'album_art'].values[0]
+            album_art_data = database.get_album_art(song)
         except:
             album_art_data = None
 

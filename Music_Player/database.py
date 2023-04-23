@@ -18,10 +18,10 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         title = os.path.splitext(title)[0]
 
     if album == None or album == "":
-        album = "Unknown"
+        album = "none"
     
     if artist == None or artist == "":
-        artist = "Unknown"
+        artist = "none"
 
     if not music_df[music_df['title'] == title].empty:
         print(f"A song with the title '{title}' already exists in the database.")
@@ -48,7 +48,7 @@ def add_music(filename, title, album, length, artist, lyrics=None, album_art=Non
         save_to_csv(database_path)
 
 # Function to update a music in the DataFrame
-def update_music(filename, title, album, artist):
+def update_music(filename, title, album, artist, lyrics=None):
     global music_df
 
     if title == None or title == "":
@@ -56,18 +56,21 @@ def update_music(filename, title, album, artist):
         title = os.path.splitext(title)[0]
 
     if album == None or album == "":
-        album = "Unknown"
+        album = "none"
     
     if artist == None or artist == "":
-        artist = "Unknown"
+        artist = "none"
+
+    if lyrics == None:
+        lyrics = "No lyrics found."
 
     music_info_row = {'filename': filename,
                         'album': album,
                         'title': title,
-                        'length': music_df.loc[music_df['filename'] == filename, 'length'].values[0],
+                        'length': get_length(filename),
                         'artist': artist,
-                        'lyrics': music_df.loc[music_df['filename'] == filename, 'lyrics'].values[0],
-                        'album_art': music_df.loc[music_df['filename'] == filename, 'album_art'].values[0]
+                        'lyrics': lyrics,
+                        'album_art': get_album_art(filename)
                         }
     music_df = music_df[music_df['filename'] != filename]
     list_of_music_info = music_df.to_dict('records')
@@ -150,6 +153,8 @@ def upload_wav():
     
     global music_df
     file_path = askopenfilename()
+    if file_path == "":
+        return ""
     # print(filename)
     audio = sf.SoundFile(file_path)
 
@@ -158,8 +163,8 @@ def upload_wav():
     title = audio.__getattr__('title')
     album = audio.__getattr__('album')
     length = audio.frames / audio.samplerate
-    lyrics = get_lyrics(file_path)
-    album_art = get_album_art(file_path)
+    lyrics = get_lyrics_from_file(file_path)
+    album_art = get_album_art_from_file(file_path)
 
     add_music(filename, title, album, length, artist, lyrics, album_art)
     return file_path
@@ -172,7 +177,7 @@ def get_format_length(length):
         return f"{minutes}:0{seconds}"
     return f"{minutes}:{seconds}"
 
-def get_lyrics(filename):
+def get_lyrics_from_file(filename):
     try:
         audio = WAVE(filename)
         lyrics = audio.tags['TXXX:LYRICS']
@@ -182,7 +187,7 @@ def get_lyrics(filename):
         lyrics = None
     return lyrics
 
-def get_album_art(filename):
+def get_album_art_from_file(filename):
     try:
         audio = WAVE(filename)
         album_art = repr(audio.tags['APIC:'].data)
@@ -201,46 +206,27 @@ def get_title(filename):
     title = music_df[music_df['filename'] == filename]['title'].values[0]
     return title
 
+def get_artist(filename):
+    global music_df
+    artist = music_df[music_df['filename'] == filename]['artist'].values[0]
+    return artist
+
+def get_album(filename):
+    global music_df
+    album = music_df[music_df['filename'] == filename]['album'].values[0]
+    return album
+
 def get_length(filename):
     global music_df
     length = music_df[music_df['filename'] == filename]['length'].values[0]
     return length
 
-# Example usage
+def get_lyrics(filename):
+    global music_df
+    lyrics = music_df[music_df['filename'] == filename]['lyrics'].values[0]
+    return lyrics
 
-# load_from_csv(database_path)
-
-# add_music('song1.wav', 'Thriller', 'Billie Jean', 294, 'Michael Jackson')
-# add_music('song2.wav', 'Back in Black', 'Hells Bells', 312, 'AC/DC')
-# add_music('song3.wav', 'Rumours', 'Dreams', 257, 'Fleetwood Mac')
-# add_music('song4.wav', 'The Dark Side of the Moon', 'Time', 421, 'Pink Floyd')
-# add_music('song5.wav', 'Purple Rain', 'When Doves Cry', 346, 'Prince')
-
-# search_music(filename='song')
-# search_music(title='Thriller')
-# search_music(album='time')
-# search_music(artist='AC/DC')
-# search_music(min_length=300)
-
-# search_music(filename='music')
-# search_all("in")
-
-# while(1):
-#     user_input = input("Choose action(A for add music, R for remove music, F for find music, S for Save and quit program): ")
-
-#     if user_input == "A":
-#         upload_wav()
-        
-#     elif user_input == "R":
-#         title = input("Input title to remove: ")
-#         remove_music(title)
-#     elif user_input == "F":
-#         search_target = input("Input keyword: ")
-#         search_all(search_target)
-#     elif user_input == "S":
-#         break
-#     else:
-#         print("Invalid input, please input again.")
-
-# save_to_csv(database_path)
-# print("Saved.")
+def get_album_art(filename):
+    global music_df
+    album_art = music_df[music_df['filename'] == filename]['album_art'].values[0]
+    return album_art
