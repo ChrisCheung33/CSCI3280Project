@@ -58,11 +58,7 @@ pattern = "*.wav"
 play_obj = None
 showing_visualize_music = False #Use for turn on/off the visualize_music
 frame = 0 #show the number of frame, use for gif animation
-visual_thread = None #Global music thread
-pause_event = threading.Event()
-resume_event = threading.Event()
-stop_event = threading.Event()
-
+v_plt = None
 
 song_length = 0
 
@@ -92,12 +88,12 @@ def select():
     
 #action for the stop button: to clear a song when it is activated
 def stop():
-    global frame,stop_event,visual_thread
+    global v_plt
+    if v_plt != None:
+        v_plt.close()
+        v_plt = None
     if play_obj:
         play_obj.stop()
-    visual_thread = None
-    stop_event.set()
-    frame = 0
     label.config(text = "Choose a song to play")
     show_lyrics("")
     show_art("")
@@ -535,12 +531,13 @@ def visualize_music(song_name,pause_event,resume_event,stop_event):
 #                 resume_event.set()
 
 def show_visualize_music():
+    global v_plt
     if(tree.selection()):
         showing_visualize_music = True
         selected_song = tree.focus()
         selected_song_name = tree.item(selected_song)['values'][0]
-        select()
-        music_visualization.create_visualize_music(rootpath+database.get_filename(selected_song_name))
+        music_length = database.get_length(database.get_filename(selected_song_name))
+        v_plt = music_visualization.create_visualize_music(rootpath+database.get_filename(selected_song_name),music_length = music_length,function = select())
 
 def change_vol(_=None):
     if play_obj:

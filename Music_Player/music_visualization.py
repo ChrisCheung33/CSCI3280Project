@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # filename = "./music/ZenZenZense.wav"
 
-def create_visualize_music(filename,savepath = None):
+def create_visualize_music(filename,savepath = None, music_length = 0, function = None):
     # Open the audio file using the wave.open() method
     wav_obj = wave.open(filename, 'rb')
 
@@ -22,7 +22,7 @@ def create_visualize_music(filename,savepath = None):
     # Store the frame rate in a variable using the getframerate() function
     frame_rate = wav_obj.getframerate()
     
-    duration = len(audio_frames) / frame_rate
+    duration = len(audio_frames) / frame_rate * 4
 
     # Create a list of frames for the animation
     frames = []
@@ -44,8 +44,8 @@ def create_visualize_music(filename,savepath = None):
 
     # Create an animation from the frames
     plt.axis('off')
-    ani = animation.ArtistAnimation(fig, frames, interval=0.25*1000, blit=True, repeat=False)
-    
+    ani = animation.ArtistAnimation(fig, frames, interval=50, blit=True, repeat=False)
+    # music_length/duration/4
     # def on_animation_complete():
     #     plt.close()
     
@@ -57,3 +57,6 @@ def create_visualize_music(filename,savepath = None):
     # Uncomment the following line to save the animation as a video file
     # ani.save(savepath)
     plt.show()
+    if function != None:
+        function()
+    return plt
