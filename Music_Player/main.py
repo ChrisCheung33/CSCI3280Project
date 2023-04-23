@@ -6,7 +6,7 @@ import fnmatch
 import struct
 import os
 import numpy as np
-import simpleaudio as sa
+# import simpleaudio as sa
 import database
 import soundfile as sf
 from io import BytesIO
@@ -394,6 +394,7 @@ vol = tk.Scale(
     bg=COLOR[1],
     fg=COLOR[3],
     troughcolor=COLOR[3],
+    showvalue=0,
     from_ = 0,
     to = 100,
     orient = tk.HORIZONTAL,
