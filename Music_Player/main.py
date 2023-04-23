@@ -56,12 +56,16 @@ song_length = 0
 #action for the play button: to select a song to be play
 def select():
     
-    if play_obj:
+    if play_obj and mixer is not None:
         play_obj.stop()
         mixer.quit()
 
     # get the selected song from the treeview
     selected_song = tree.focus()
+    if selected_song == "":
+        print("No song selected")
+        mixer.init()
+        return
     selected_song_name = tree.item(selected_song)['values'][0]
     selected_song_path = database.get_filename(selected_song_name)
     
