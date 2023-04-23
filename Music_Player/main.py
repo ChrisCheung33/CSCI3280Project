@@ -454,17 +454,17 @@ manageFrame.pack(padx = 15, pady = 15, anchor = 'e')
 
 # Button for add song
 add_image = ImageTk.PhotoImage(Image.open("./images/add.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-addButton = tk.Button(manageFrame, text = 'Add', image = add_image, bg = COLOR[1], borderwidth = 0, command = add_song)
+addButton = tk.Button(manageFrame, text = 'Add', image = add_image, bg = COLOR[0], borderwidth = 0, command = add_song)
 addButton.pack(pady = 15, side = 'left')
 
 # Button for edit song
 edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-editButton = tk.Button(manageFrame, text = 'Edit', image = edit_image, bg = COLOR[1], borderwidth = 0, command = edit_song)
+editButton = tk.Button(manageFrame, text = 'Edit', image = edit_image, bg = COLOR[0], borderwidth = 0, command = edit_song)
 editButton.pack(pady = 15, side = 'left')
 
 # Button for network_connection
 network_connection_image = ImageTk.PhotoImage(Image.open("./images/network_connection.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-editButton = tk.Button(manageFrame, text = 'Edit', image = network_connection_image, bg = COLOR[1], borderwidth = 0, command = network_connection)
+editButton = tk.Button(manageFrame, text = 'Edit', image = network_connection_image, bg = COLOR[0], borderwidth = 0, command = network_connection)
 editButton.pack(pady = 15, side = 'left')
 
 music_info = tk.Frame(canvas, bg = COLOR[1], width=800)
