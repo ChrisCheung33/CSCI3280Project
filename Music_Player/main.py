@@ -488,7 +488,7 @@ panel = tk.Label(music_info, image = img, bg=COLOR[1])
 panel.image = img
 panel.pack(side = "top")
 
-label = tk.Label(music_info, text = 'Choose a song to play', bg = COLOR[1], fg = COLOR[3], font = ('poppins',14))
+label = tk.Label(music_info, text = 'Choose a song to play', bg = COLOR[1], fg = COLOR[3], font = ('poppins',24))
 label.pack(pady = 15, side='top')
 
 # progressbar
