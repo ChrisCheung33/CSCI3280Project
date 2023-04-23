@@ -304,6 +304,26 @@ def edit_song():
     saveButton = tk.Button(editFrame, text = "Save", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = lambda: save_changes(filename, nameEntry.get(), artistEntry.get(), albumEntry.get(), editWindow))
     saveButton.grid(row = 3, column = 0, columnspan = 2, padx = 5, pady = 5)
 
+# let the user for network connection
+def network_connection(): 
+
+    # create a new window
+    NetworkConnectionWindow = tk.Toplevel()
+    NetworkConnectionWindow.title("Network Connection")
+    NetworkConnectionWindow.geometry("400x200")
+    NetworkConnectionWindow.resizable(False, False)
+    NetworkConnectionWindow.configure(bg = COLOR[1])
+    # create a frame
+    NetworkConnectionFrame = tk.Frame(NetworkConnectionWindow, bg = COLOR[1])
+    NetworkConnectionFrame.pack(padx = 15, pady = 15, anchor = 'center')
+    # create a label for the name of the song
+    IPAddressLabel = tk.Label(NetworkConnectionFrame, text = "IP Address", bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    IPAddressLabel.grid(row = 0, column = 0, padx = 5, pady = 5)
+    # create an entry for the name of the song
+    nameEntry = tk.Entry(NetworkConnectionWindow, width = 30, bg = COLOR[1], fg = COLOR[3], font = ("poppins", 14))
+    nameEntry.grid(row = 0, column = 1, padx = 5, pady = 5)
+    #nameEntry.insert(0, name)
+
 
 def save_changes(filename, title, artist, album, editWindow):
     # get the selected song
@@ -518,6 +538,11 @@ addButton.pack(pady = 15, side = 'left')
 # Button for edit song
 edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
 editButton = tk.Button(top, text = 'Edit', image = edit_image, bg = COLOR[1], borderwidth = 0, command = edit_song)
+editButton.pack(pady = 15, side = 'left')
+
+# Button for network_connection
+network_connection_image = ImageTk.PhotoImage(Image.open("./images/network_connection.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+editButton = tk.Button(top, text = 'Edit', image = network_connection_image, bg = COLOR[1], borderwidth = 0, command = network_connection)
 editButton.pack(pady = 15, side = 'left')
 
 def read_file_to_treeview(rootpath, pattern):
