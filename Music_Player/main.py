@@ -195,16 +195,24 @@ def playmusic(file_path):
             print(audio_array.shape)
 
     global play_obj
+    mixer.init(sample_rate, -bits_per_sample, num_channels, 1024)
+    # load audio_array into mixer
+    play_obj = mixer.Sound(audio_array)
+    play_obj.play()
+    change_vol()
+
     filename = os.path.basename(file_path)
     label.config(text = "Now playing: " + database.get_title(filename))
     show_lyrics(file_path)
     show_art(file_path)
+    
     global frame
     frame = 0
 
     # get length of the song
-    data, samplerate = sf.read(file_path)
-    length = len(data) / samplerate
+    # data, samplerate = sf.read(file_path)
+    # length = len(data) / samplerate
+    length = database.get_length(file_path)
 
     pb.start(int(10 * length))
 
