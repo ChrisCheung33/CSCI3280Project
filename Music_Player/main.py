@@ -27,6 +27,9 @@ from pygame import mixer
 # COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
 COLOR = ['#2C3639', '#3F4E4F', '#A27B5C', '#DCD7C9']
 
+TARGET_SIZE = (256, 256)
+TARGET_SIZE_SMALL = (50, 50)
+
 #design of the UI of the music player
 canvas = tk.Tk()
 canvas.attributes("-fullscreen", True)
@@ -229,7 +232,9 @@ def playmusic(file_path):
 def add_song():
     database.load_from_csv(database.database_path)
     song = database.upload_wav()
-    print("Song: " + song)
+    # print("Song: " + song)
+    if song == "":
+        return
     destination_file = save_wav(song)
     # remove the music/ part of the path
     destination_file = destination_file[6:]
@@ -411,7 +416,8 @@ def show_visualize_music():
 # sidebar.pack(side = 'left', fill = 'both')
 
 def change_vol(_=None):
-    play_obj.set_volume(vol.get() / 100)
+    if play_obj:
+        play_obj.set_volume(vol.get() / 100)
 
 # create a main frame
 mainFrame = tk.Frame(canvas, bg = COLOR[3])
@@ -427,10 +433,10 @@ searchLabel.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 searchBar = tk.Entry(searchFrame, width = 60, bg = COLOR[3], fg = COLOR[0], font = ("poppins", 14))
 searchBar.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
-enterButton = tk.Button(searchFrame, text = "Enter", bg = COLOR[0], fg = COLOR[1], font = ("poppins", 14), command = search)
+enterButton = tk.Button(searchFrame, text = "Enter", bg = COLOR[3], fg = COLOR[0], font = ("poppins", 14), command = search)
 enterButton.pack(padx = 15, pady = 15, anchor = 'center', side='left')
 
-tree = ttk.Treeview(mainFrame, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "20")
+tree = ttk.Treeview(mainFrame, columns = ("Name", "Artist", "Album", "Time"), show = "headings", height = "12")
 tree.heading("Name", text = "Name")
 tree.heading("Artist", text = "Artist")
 tree.heading("Album", text = "Album")
@@ -443,10 +449,27 @@ tree.pack(padx = 15, pady = 15)
 ttk.Style().configure("Treeview", background=COLOR[3], 
 foreground=COLOR[0], fieldbackground=COLOR[1])
 
+manageFrame = tk.Frame(mainFrame, bg = COLOR[3])
+manageFrame.pack(padx = 15, pady = 15, anchor = 'e')
+
+# Button for add song
+add_image = ImageTk.PhotoImage(Image.open("./images/add.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+addButton = tk.Button(manageFrame, text = 'Add', image = add_image, bg = COLOR[1], borderwidth = 0, command = add_song)
+addButton.pack(pady = 15, side = 'left')
+
+# Button for edit song
+edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+editButton = tk.Button(manageFrame, text = 'Edit', image = edit_image, bg = COLOR[1], borderwidth = 0, command = edit_song)
+editButton.pack(pady = 15, side = 'left')
+
+# Button for network_connection
+network_connection_image = ImageTk.PhotoImage(Image.open("./images/network_connection.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
+editButton = tk.Button(manageFrame, text = 'Edit', image = network_connection_image, bg = COLOR[1], borderwidth = 0, command = network_connection)
+editButton.pack(pady = 15, side = 'left')
+
 music_info = tk.Frame(canvas, bg = COLOR[1], width=800)
 music_info.pack(padx = 15, pady = 15, anchor = 'center', expand=True, fill='both')
 
-TARGET_SIZE = (256, 256)
 loaded_img = Image.open("./images/art.jpeg")
 resized_img = loaded_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
 img = ImageTk.PhotoImage(resized_img)
@@ -493,14 +516,8 @@ vol.pack(side='left')
 
 vol.set(30)
 
-lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = COLOR[3], fg = COLOR[0], font = ('poppins',14), width = 50, height = 15)
-lyricsText.pack(padx = 15, pady = 15, side = 'bottom')
-
 top = tk.Frame(music_info, bg = COLOR[1])
 top.pack(padx = 15, pady = 15, anchor = 'center')
-
-
-TARGET_SIZE_SMALL = (64, 64)
 
 #Button for visualize song
 wave_image = ImageTk.PhotoImage(Image.open("./images/wave.png").resize((32,32), Image.Resampling.LANCZOS))
@@ -534,20 +551,9 @@ next_image = ImageTk.PhotoImage(Image.open("./images/next.png").resize(TARGET_SI
 nextButton = tk.Button(top, text = 'Next', image = next_image, bg = COLOR[1], borderwidth = 0, command = play_next)
 nextButton.pack(pady = 15, side = 'left')
 
-# Button for add song
-add_image = ImageTk.PhotoImage(Image.open("./images/add.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-addButton = tk.Button(top, text = 'Add', image = add_image, bg = COLOR[1], borderwidth = 0, command = add_song)
-addButton.pack(pady = 15, side = 'left')
+lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = COLOR[3], fg = COLOR[0], font = ('poppins',14), width = 50, height = 12)
+lyricsText.pack(padx = 15, pady = 15, side = 'top')
 
-# Button for edit song
-edit_image = ImageTk.PhotoImage(Image.open("./images/edit.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-editButton = tk.Button(top, text = 'Edit', image = edit_image, bg = COLOR[1], borderwidth = 0, command = edit_song)
-editButton.pack(pady = 15, side = 'left')
-
-# Button for network_connection
-network_connection_image = ImageTk.PhotoImage(Image.open("./images/network_connection.png").resize(TARGET_SIZE_SMALL, Image.Resampling.LANCZOS))
-editButton = tk.Button(top, text = 'Edit', image = network_connection_image, bg = COLOR[1], borderwidth = 0, command = network_connection)
-editButton.pack(pady = 15, side = 'left')
 
 def read_file_to_treeview(rootpath, pattern):
     filename_list = []
@@ -584,7 +590,7 @@ def show_lyrics(song=""):
     song = os.path.basename(song)
     # print(song)
     # get the lyrics of the song
-    lyrics = database.music_df.loc[database.music_df['filename'] == song, 'lyrics'].values[0]
+    lyrics = database.get_lyrics(song)
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
@@ -595,7 +601,7 @@ def show_art(file_path):
 
         song = os.path.basename(file_path)
         try:
-            album_art_data = database.music_df.loc[database.music_df['filename'] == song, 'album_art'].values[0]
+            album_art_data = database.get_album_art(song)
         except:
             album_art_data = None
 

@@ -150,6 +150,8 @@ def upload_wav():
     
     global music_df
     file_path = askopenfilename()
+    if file_path == "":
+        return ""
     # print(filename)
     audio = sf.SoundFile(file_path)
 
@@ -158,8 +160,8 @@ def upload_wav():
     title = audio.__getattr__('title')
     album = audio.__getattr__('album')
     length = audio.frames / audio.samplerate
-    lyrics = get_lyrics(file_path)
-    album_art = get_album_art(file_path)
+    lyrics = get_lyrics_from_file(file_path)
+    album_art = get_album_art_from_file(file_path)
 
     add_music(filename, title, album, length, artist, lyrics, album_art)
     return file_path
@@ -178,7 +180,7 @@ def get_format_length(length):
         return f"{minutes}:0{seconds}"
     return f"{minutes}:{seconds}"
 
-def get_lyrics(filename):
+def get_lyrics_from_file(filename):
     try:
         audio = WAVE(filename)
         lyrics = audio.tags['TXXX:LYRICS']
@@ -188,7 +190,7 @@ def get_lyrics(filename):
         lyrics = None
     return lyrics
 
-def get_album_art(filename):
+def get_album_art_from_file(filename):
     try:
         audio = WAVE(filename)
         album_art = repr(audio.tags['APIC:'].data)
@@ -221,6 +223,16 @@ def get_length(filename):
     global music_df
     length = music_df[music_df['filename'] == filename]['length'].values[0]
     return length
+
+def get_lyrics(filename):
+    global music_df
+    lyrics = music_df[music_df['filename'] == filename]['lyrics'].values[0]
+    return lyrics
+
+def get_album_art(filename):
+    global music_df
+    album_art = music_df[music_df['filename'] == filename]['album_art'].values[0]
+    return album_art
 
 # Example usage
 
