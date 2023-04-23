@@ -340,7 +340,7 @@ def visualize_music():
         selected_song = tree.focus()
         selected_song_name = tree.item(selected_song)['values'][0]
         selected_song_path = database.get_filename(selected_song_name)
-        music_length = database.get_length(selected_song_path)
+        music_length = database.get_length(rootpath + selected_song_path)
         print(music_length)
         max_frame = 0
         
@@ -476,7 +476,7 @@ TARGET_SIZE_SMALL = (64, 64)
 
 #Button for visualize song
 wave_image = ImageTk.PhotoImage(Image.open("./images/wave.png").resize((32,32), Image.Resampling.LANCZOS))
-button = tk.Button(panel, text='Button', image = wave_image, bg = '#495579', borderwidth = 0, command= show_visualize_music)
+button = tk.Button(panel, text='Button', image = wave_image, bg = COLOR[1], borderwidth = 0, command= show_visualize_music)
 button.place(relx=1.0, rely=1.0, anchor='se')
 
 #Button for previous song
