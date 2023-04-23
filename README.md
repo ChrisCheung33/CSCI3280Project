@@ -2,6 +2,12 @@
 
 - This is the project of CSCI3280 Group 13 in the 2022-2023 2nd semester
 
+## Get the project
+- clone the project to your local device
+    ```bash
+    git clone https://github.com/ChrisCheung33/CSCI3280Project.git
+    ```
+
 ## Start the project
 - make sure you are in the directory `Music_Player`
     ```bash
