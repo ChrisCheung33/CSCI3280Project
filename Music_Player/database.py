@@ -207,6 +207,11 @@ def get_title(filename):
     title = music_df[music_df['filename'] == filename]['title'].values[0]
     return title
 
+def get_length(filename):
+    global music_df
+    length = music_df[music_df['filename'] == filename]['length'].values[0]
+    return length
+
 # Example usage
 
 # load_from_csv(database_path)
