@@ -15,35 +15,35 @@ class p2p_obj:
         self.server_tuple = (host,port)
         self.connect_server_tuple_list = []
         
-    def server(self,file_name,file_formate):
+    def server(self,file_name,file_format):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(self.server_tuple)
         s.listen(1)
         conn, addr = s.accept()
         
-        if file_formate == "wav":
+        if file_format == "wav":
             open_mode = 'wb'
         else:
             open_mode = 'w'
         
-        with open(file_name+"."+file_formate,open_mode) as f:
-            while file_formate == "wav":
+        with open(file_name+"."+file_format,open_mode) as f:
+            while file_format == "wav":
                 l = conn.recv(1024)
                 if not l: break
                 f.write(l)
-            if(file_formate == "csv"):
+            if(file_format == "csv"):
                 data = conn.recv(1024)
                 f.write(data.decode('utf-8'))
             s.close()
     
-    def client(self,file_name,file_formate):
+    def client(self,file_name,file_format):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.connect(self.server_tuple)
 
-        if(file_formate == "wav"):
-            with open(file_name+file_formate, 'rb') as f:
+        if(file_format == "wav"):
+            with open(file_name+file_format, 'rb') as f:
                 for l in f: s.sendall(l)
-        elif(file_formate == "csv"):
+        elif(file_format == "csv"):
             while True:
                 # open the .csv file and read its content
                 with open('music_database.csv', 'r') as f:
