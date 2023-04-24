@@ -45,7 +45,7 @@ class p2p_obj:
                     l = conn.recv(1024)
                     if not l: break
                     f.write(l)
-            s.close()
+        s.close()
     
     def client(self,file_name,file_format):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
