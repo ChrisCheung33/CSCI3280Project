@@ -68,8 +68,12 @@ online_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artis
 #action for the play button: to select a song to be play
 def select():
     
-    if play_obj and mixer is not None:
+    if play_obj:
         play_obj.stop()
+    
+    # check if the mixer is already initialized
+    if mixer.get_init() != None:
+        print("Mixer already initialized")
         mixer.quit()
 
     # get the selected song from the treeview
@@ -78,9 +82,17 @@ def select():
         print("No song selected")
         mixer.init()
         return
-    selected_song_name = tree.item(selected_song)['values'][0]
-    selected_song_path = database.get_filename(selected_song_name)
-    
+
+    try:
+        selected_song_name = tree.item(selected_song)['values'][0]
+        selected_song_path = database.get_filename(selected_song_name)
+    except:
+        label.config(text = "Song not in database")
+        mixer.init()
+        show_lyrics("")
+        show_art("")
+        return
+
     global song_length
     song_length = database.get_length(selected_song_path)
 
@@ -740,18 +752,23 @@ def read_file_to_treeview(rootpath, patterns):
         # insert the song in the treeview
         tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
 
-    # if pandas dataframe online_df is not empty
+
+
     if not online_df.empty:
-        # get the name of the song
-        name = online_df['title'].iloc[0]
-        # get the artist of the song
-        artist = online_df['artist'].iloc[0]
-        # get the album of the song
-        album = online_df['album'].iloc[0]
-        # get the time of the song
-        time = online_df['length'].iloc[0]
-        # insert the song in the treeview
-        tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
+        for row in tree.get_children():
+            tree.delete(row)
+
+        new_df = pd.concat([database.music_df, online_df], ignore_index=True, sort=True).drop_duplicates(['filename'], keep='last')
+        new_df = new_df.sort_values(by=['artist', 'album', 'title'])
+
+        for index, row in new_df.iterrows():
+            artist = row['artist']
+            album = row['album']
+            if artist == "none":
+                artist = "None"
+            if album == "none":
+                album = "None"
+            tree.insert("", "end", values = (row['title'], artist, album, database.get_format_length(row['length'])))
 
 
 # show lyrics of the song in the text box
