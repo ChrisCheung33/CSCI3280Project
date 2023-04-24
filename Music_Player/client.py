@@ -22,6 +22,6 @@ import socket
 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 s.connect((HOST,PORT))
 
-with open('./music/numb.wav', 'rb') as f:
+with open('music_database.csv', 'rb') as f:
   for l in f: s.sendall(l)
 s.close()

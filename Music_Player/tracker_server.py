@@ -16,6 +16,6 @@ class TrackerServer:
                 self.ip_addresses[data.decode('utf-8')] = addr[0]
                 print(self.ip_addresses)
             conn.close()
-            
+
 tracker_server = TrackerServer(12345)
 tracker_server.start()

@@ -1,4 +1,6 @@
 import socket
+import pandas as pd
+from io import StringIO
 
 # Host = '0.0.0.0'
 # Port = 8000
@@ -33,9 +35,23 @@ s.bind((HOST, PORT))
 s.listen(1)
 conn, addr = s.accept()
 
-with open('output.wav','wb') as f:
-  while True:
-    l = conn.recv(1024)
-    if not l: break
-    f.write(l)
+buffer = b''
+while True:
+  data = conn.recv(1024)
+  if not data: break
+  buffer += data
+
+# csv byte data to pd dataframe
+strData=str(buffer,'utf-8')
+data = StringIO(strData) 
+music_df = pd.read_csv(data)
+results = music_df
+print(results[results['lyrics'].str.contains("lonely", case=False)])
+
+
+# with open('output.csv','wb') as f:
+#   while True:
+#     l = conn.recv(1024)
+#     if not l: break
+#     f.write(l)
 s.close()

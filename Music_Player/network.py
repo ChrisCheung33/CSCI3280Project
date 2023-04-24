@@ -1,12 +1,8 @@
-import socket
-import threading
-import time
-import json
-
-
 import csv
 import socket
 import threading
+import time
+
 
 class Network:
     def __init__(self, tracker_server_ip, tracker_server_port):
@@ -70,7 +66,7 @@ class Network:
 
     def search_music(self, query):
         results = []
-        with open('music_database.csv', 'r') as f:
+        with open('database.csv', 'r') as f:
             reader = csv.reader(f)
             for row in reader:
                 if query.lower() in row[0].lower():
@@ -79,6 +75,7 @@ class Network:
 
     def client(self, ip):
         self.cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        results = []
         while True:
             connected = False
             while not connected:
@@ -97,10 +94,11 @@ class Network:
                     self.cli.send(query.encode('utf-8'))
                     data = self.cli.recv(4096)
                     if data:
-                        results = data.decode('utf-8').split(',')
-                        print("Results from {}: {}".format(ip, results))
+                        results.extend(data.decode('utf-8').split(','))
+                        return results
                 except Exception:
                     print("Client: Could not send more data to ", ip)
                     break
+            return results
 
-network = Network('localhost', 12345)
+network = Network('localhost', 12345) # Replace 'tracker_server_ip' with the actual IP address of the tracker server.
