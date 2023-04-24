@@ -4,6 +4,7 @@ from tkinter.filedialog import askopenfilename
 import soundfile as sf
 from mutagen.wave import WAVE
 from tinytag import TinyTag
+import eyed3
 
 # Create an empty DataFrame to store music information
 music_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist', 'lyrics', 'album_art'])
@@ -191,7 +192,10 @@ def get_format_length(length):
 
 def get_lyrics_from_file(filename):
     try:
-        if filename.endswith('.mp3'):
+        if not filename.endswith('.wav'):
+            track = eyed3.load(filename)
+            tag = track.tag
+            lyrics = tag.lyrics[0].text
             return None
 
         audio = WAVE(filename)
@@ -204,7 +208,7 @@ def get_lyrics_from_file(filename):
 
 def get_album_art_from_file(filename):
     try:
-        if filename.endswith('.mp3'):
+        if not filename.endswith('.wav'):
             return None
 
         audio = WAVE(filename)
