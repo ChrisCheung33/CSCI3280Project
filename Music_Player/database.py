@@ -3,6 +3,8 @@ import os
 from tkinter.filedialog import askopenfilename
 import soundfile as sf
 from mutagen.wave import WAVE
+from tinytag import TinyTag
+import eyed3
 
 # Create an empty DataFrame to store music information
 music_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist', 'lyrics', 'album_art'])
@@ -155,7 +157,18 @@ def upload_wav():
     file_path = askopenfilename()
     if file_path == "":
         return ""
-    # print(filename)
+    
+    if file_path.endswith('.mp3'):
+        audio = TinyTag.get(file_path)
+
+        filename = os.path.basename(file_path)
+        artist = audio.artist
+        title = audio.title
+        album = audio.album
+        length = audio.duration
+        lyrics = get_lyrics_from_file(file_path)
+        album_art = get_album_art_from_file(file_path)
+
     audio = sf.SoundFile(file_path)
 
     filename = os.path.basename(file_path) 
@@ -179,6 +192,12 @@ def get_format_length(length):
 
 def get_lyrics_from_file(filename):
     try:
+        if not filename.endswith('.wav'):
+            track = eyed3.load(filename)
+            tag = track.tag
+            lyrics = tag.lyrics[0].text
+            return None
+
         audio = WAVE(filename)
         lyrics = audio.tags['TXXX:LYRICS']
         if lyrics == '':
@@ -189,6 +208,9 @@ def get_lyrics_from_file(filename):
 
 def get_album_art_from_file(filename):
     try:
+        if not filename.endswith('.wav'):
+            return None
+
         audio = WAVE(filename)
         album_art = repr(audio.tags['APIC:'].data)
     except:

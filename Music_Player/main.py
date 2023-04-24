@@ -52,7 +52,7 @@ s.configure('Treeview', rowheight=40)
 
 #file for music
 rootpath = "./music/"#path for the music play list
-pattern = "*.wav"
+patterns = ["*.wav", "*.mp3"]#file type for the music play list
 
 play_obj = None
 showing_visualize_music = False #Use for turn on/off the visualize_music
@@ -152,69 +152,77 @@ def playmusic(file_path):
     if mixer.get_busy():
         print("Mixer is busy")
         pause_song()
-
-    with open(file_path, 'rb') as wave_file:
-        # Check that the file is a WAV file
-        riff_chunk_id = wave_file.read(4)
-        riff_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
-        riff_format = wave_file.read(4)
-        if riff_chunk_id != b'RIFF' or riff_format != b'WAVE':
-            raise ValueError('File is not a WAV file.')
-
-        # Read the header information
-        fmt_chunk_id = wave_file.read(4)
-        fmt_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
-        audio_format = struct.unpack('<H', wave_file.read(2))[0]
-        num_channels = struct.unpack('<H', wave_file.read(2))[0]
-        sample_rate = struct.unpack('<I', wave_file.read(4))[0]
-        byte_rate = struct.unpack('<I', wave_file.read(4))[0]
-        block_align = struct.unpack('<H', wave_file.read(2))[0]
-        bits_per_sample = struct.unpack('<H', wave_file.read(2))[0]
-
-        # Verify that the audio format is PCM
-        if audio_format != 1:
-            raise ValueError('File is not in PCM format.')
-
-        # Read the data chunk
-        # data_chunk_id = wave_file.read(4)
-        # data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
-        # raw_data = wave_file.read(data_chunk_size)
-        sample_rate, raw_data = wavfile.read(file_path)
-
-    # Convert raw byte data to NumPy array with proper data type
-    if bits_per_sample == 16:
-        data_type = np.int16
-    elif bits_per_sample == 8:
-        data_type = np.int8
-    elif bits_per_sample == 24:
-        data, sample_rate = sf.read(file_path)
-        audio = sf.SoundFile(file_path)
-
-        keys = list(audio.copy_metadata().keys())
-        # print(keys)
-        sf.write(file_path, data, sample_rate, subtype='PCM_16')
-
-        playmusic(file_path)
-        return
-    else:
-        raise ValueError('File has unsupported bit depth.')
-    
-    audio_array = np.frombuffer(raw_data, dtype=data_type)
-
-
-    # Reshape the array for stereo audio
-    if num_channels == 2:
-        try:
-            print("Trying to reshape")
-            audio_array = audio_array.reshape(-1, 2)
-        except:
-            print("Reshaping failed")
-            print(audio_array.shape)
-
     global play_obj
-    mixer.init(sample_rate, -bits_per_sample, num_channels, 1024)
-    # load audio_array into mixer
-    play_obj = mixer.Sound(audio_array)
+    # if last 4 characters of the file path is mp3
+    if file_path[-4:] != ".wav":
+        mixer.init()
+        play_obj = mixer.Sound(file_path)
+
+    else:
+        with open(file_path, 'rb') as wave_file:
+            # Check that the file is a WAV file
+            riff_chunk_id = wave_file.read(4)
+            riff_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+            riff_format = wave_file.read(4)
+            if riff_chunk_id != b'RIFF' or riff_format != b'WAVE':
+                raise ValueError('File is not a WAV file.')
+
+            # Read the header information
+            fmt_chunk_id = wave_file.read(4)
+            fmt_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+            audio_format = struct.unpack('<H', wave_file.read(2))[0]
+            num_channels = struct.unpack('<H', wave_file.read(2))[0]
+            sample_rate = struct.unpack('<I', wave_file.read(4))[0]
+            byte_rate = struct.unpack('<I', wave_file.read(4))[0]
+            block_align = struct.unpack('<H', wave_file.read(2))[0]
+            bits_per_sample = struct.unpack('<H', wave_file.read(2))[0]
+
+            # Verify that the audio format is PCM
+            if audio_format != 1:
+                raise ValueError('File is not in PCM format.')
+
+            # Read the data chunk
+            # data_chunk_id = wave_file.read(4)
+            # data_chunk_size = struct.unpack('<I', wave_file.read(4))[0]
+            # raw_data = wave_file.read(data_chunk_size)
+            sample_rate, raw_data = wavfile.read(file_path)
+
+        # Convert raw byte data to NumPy array with proper data type
+        if bits_per_sample == 16:
+            data_type = np.int16
+        elif bits_per_sample == 8:
+            data_type = np.int8
+        elif bits_per_sample == 24:
+            data, sample_rate = sf.read(file_path)
+            audio = sf.SoundFile(file_path)
+
+            keys = list(audio.copy_metadata().keys())
+            # print(keys)
+            sf.write(file_path, data, sample_rate, subtype='PCM_16')
+
+            playmusic(file_path)
+            return
+        else:
+            raise ValueError('File has unsupported bit depth.')
+        
+        audio_array = np.frombuffer(raw_data, dtype=data_type)
+
+
+        # Reshape the array for stereo audio
+        if num_channels == 2:
+            try:
+                print("Trying to reshape")
+                audio_array = audio_array.reshape(-1, 2)
+            except:
+                print("Reshaping failed")
+                print(audio_array.shape)
+
+        # global play_obj
+        mixer.init(sample_rate, -bits_per_sample, num_channels, 1024)
+        # load audio_array into mixer
+        play_obj = mixer.Sound(audio_array)
+
+
     play_obj.play()
     change_vol()
 
@@ -252,7 +260,7 @@ def add_song():
     database.save_to_csv(database.database_path)
     for row in tree.get_children():
         tree.delete(row)
-    read_file_to_treeview(rootpath, pattern)
+    read_file_to_treeview(rootpath, patterns)
 
 # save a .wav file to the music folder
 def save_wav(file_path):
@@ -288,7 +296,7 @@ def edit_song():
     # create a new window
     editWindow = tk.Toplevel()
     editWindow.title("Edit")
-    editWindow.geometry("400x600")
+    editWindow.geometry("400x410")
     editWindow.resizable(False, False)
     editWindow.configure(bg = COLOR[1])
     # create a frame
@@ -422,20 +430,23 @@ def save_changes(filename, title, artist, album, lyrics, editWindow):
 def remove_song():
     # get the selected song
     selected = tree.selection()
-    if all(selected):
+    if not all(selected):
+        print("No song selected")
         return
     # get the filename of the song
-    filename = tree.item(selected, 'values')[0]
-    # remove the song from the database
-    if filename == "" or filename is None:
+    title = tree.item(selected, 'values')[0]
+    
+    if title == "" or title is None:
         return
-    database.remove_music(filename)
+    
     # remove the song from the treeview
     tree.delete(selected)
     # remove the song from the folder
-    os.remove(rootpath + filename)
+    os.remove(rootpath + database.get_filename(title))
+    # remove the song from the database
+    database.remove_music(title)
 
-    print(f"{filename} removed")
+    print(f"{title} removed")
 
 # search for songs in the database and show them in the treeview
 # the search is case insensitive
@@ -685,11 +696,12 @@ lyricsText = tk.Text(music_info, state=tk.DISABLED, bg = COLOR[3], fg = COLOR[0]
 lyricsText.pack(padx = 15, pady = 15, side = 'top')
 
 
-def read_file_to_treeview(rootpath, pattern):
+def read_file_to_treeview(rootpath, patterns):
     filename_list = []
     for root, dirs, files in os.walk(rootpath):
-        for filename in fnmatch.filter(files, pattern):
-            filename_list.append(os.path.basename(filename))
+        for pattern in patterns:
+            for filename in fnmatch.filter(files, pattern):
+                filename_list.append(os.path.basename(filename))
 
     filename_list.sort()
     # print(filename_list)
@@ -721,10 +733,21 @@ def show_lyrics(song=""):
     # print(song)
     # get the lyrics of the song
     lyrics = database.get_lyrics(song)
+
+    song_length = database.get_length(song)
+    
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
+    
     lyricsText.config(state=tk.DISABLED)
+    scroll_lyrics(int(song_length*40),lyricsText, 1)
+
+def scroll_lyrics(songlength,lyricsText, scroll_speed):
+    # Scroll lyrics down by the specified amount
+    lyricsText.yview_scroll(scroll_speed, "units")
+    # Call this function again after a short delay
+    lyricsText.after(songlength, scroll_lyrics, songlength,lyricsText, scroll_speed)
 
 def show_art(file_path):
         # get filename without the extension
@@ -746,6 +769,6 @@ def show_art(file_path):
         panel.image = img
 
 database.load_from_csv(database.database_path)
-read_file_to_treeview(rootpath, pattern)
+read_file_to_treeview(rootpath, patterns)
 
 canvas.mainloop()
