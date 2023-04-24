@@ -385,7 +385,7 @@ def network_connection():
     # create a new window
     NetworkConnectionWindow = tk.Toplevel()
     NetworkConnectionWindow.title("Network Connection")
-    NetworkConnectionWindow.geometry("400x600")
+    NetworkConnectionWindow.geometry("500x200")
     NetworkConnectionWindow.resizable(False, False)
     NetworkConnectionWindow.configure(bg = COLOR[1])
     # create a frame
