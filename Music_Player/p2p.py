@@ -26,9 +26,9 @@ class p2p_obj:
         else:
             open_mode = 'w'
         
-        with open(file_name+"."+file_formate,open_mode) as f:
+        with open(file_name+"."+file_format,open_mode) as f:
             while True:
-                if(file_formate == "csv"):
+                if(file_format == "csv"):
                     data = conn.recv(1024)
                     f.write(data.decode('utf-8'))
                 else:
