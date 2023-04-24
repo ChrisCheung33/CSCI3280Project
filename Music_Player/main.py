@@ -1,3 +1,4 @@
+import pickle
 import shutil
 import threading
 import tkinter as tk
@@ -15,14 +16,12 @@ import ast
 import time
 import music_visualization
 import socket
-
 from scipy.io import wavfile
-
 from pygame import mixer
-
 from scipy.io import wavfile
-
 from pygame import mixer
+import wave
+# import pyaudio
 
 host_name = socket.gethostname()
 host_ip = '192.168.1.102'# socket.gethostbyname(host_name)
@@ -151,6 +150,7 @@ def pause_song():
 
 def playmusic(file_path):
     if mixer.get_busy():
+        print("Mixer is busy")
         pause_song()
 
     with open(file_path, 'rb') as wave_file:
@@ -237,7 +237,7 @@ def playmusic(file_path):
 
     pb.stop()
     # playButton['image'] = play_image
-    play_next()
+    # play_next()
 
 
 def add_song():
