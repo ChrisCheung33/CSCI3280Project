@@ -5,9 +5,12 @@ import soundfile as sf
 from mutagen.wave import WAVE
 from tinytag import TinyTag
 import eyed3
+# import main
 
 # Create an empty DataFrame to store music information
 music_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist', 'lyrics', 'album_art'])
+
+online_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist', 'lyrics', 'album_art'])
 
 database_path = os.path.join(os.path.dirname(__file__), 'music_database.csv')
 
@@ -90,7 +93,12 @@ def remove_music(title):
 # Function to search for music and display them in a playlist
 def search_music(filename=None, title=None, album=None, min_length=None, max_length=None, artist=None, all=False):
     global music_df
-    results = music_df
+    global online_df
+    
+    if not online_df.empty:
+        results  = pd.concat([music_df, online_df], ignore_index=True).drop_duplicates(subset=['filename'], keep='first')
+    else:
+        results = music_df
 
     if filename:
         results = results[results['filename'].str.contains(filename, case=False)]
@@ -149,6 +157,12 @@ def load_from_csv(filename):
         print(f"The file '{filename}' does not exist. Creating an empty file.")
         music_df.to_csv(filename, index=False)
     music_df = pd.read_csv(filename)
+
+def load_from_online_csv():
+    global online_df
+    if not os.path.isfile("getdata.csv"):
+        online_df.to_csv("getdata.csv", index=False)
+    online_df = pd.read_csv("getdata.csv")
 
 # let user to upload a wav file
 def upload_wav():

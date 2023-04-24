@@ -410,6 +410,7 @@ def network_connection():
             global online_df
             online_df = reciever.get_online_df()
             read_file_to_treeview(rootpath, patterns)
+            database.load_from_online_csv()
     
         server_thread = threading.Thread(target=server_thread)
         server_thread.start()
