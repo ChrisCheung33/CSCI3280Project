@@ -27,13 +27,14 @@ class p2p_obj:
             open_mode = 'w'
         
         with open(file_name+"."+file_formate,open_mode) as f:
-            while file_formate == "wav":
-                l = conn.recv(1024)
-                if not l: break
-                f.write(l)
-            if(file_formate == "csv"):
-                data = conn.recv(1024)
-                f.write(data.decode('utf-8'))
+            while True:
+                if(file_formate == "csv"):
+                    data = conn.recv(1024)
+                    f.write(data.decode('utf-8'))
+                else:
+                    l = conn.recv(1024)
+                    if not l: break
+                    f.write(l)
             s.close()
     
     def client(self,file_name,file_formate):
