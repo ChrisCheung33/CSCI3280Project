@@ -733,10 +733,21 @@ def show_lyrics(song=""):
     # print(song)
     # get the lyrics of the song
     lyrics = database.get_lyrics(song)
+
+    song_length = database.get_length(song)
+    
     # show the lyrics in the text box
     lyricsText.delete('1.0', 'end')
     lyricsText.insert('1.0', lyrics)
+    
     lyricsText.config(state=tk.DISABLED)
+    scroll_lyrics(int(song_length*40),lyricsText, 1)
+
+def scroll_lyrics(songlength,lyricsText, scroll_speed):
+    # Scroll lyrics down by the specified amount
+    lyricsText.yview_scroll(scroll_speed, "units")
+    # Call this function again after a short delay
+    lyricsText.after(songlength, scroll_lyrics, songlength,lyricsText, scroll_speed)
 
 def show_art(file_path):
         # get filename without the extension
