@@ -15,13 +15,13 @@ class p2p_obj:
         self.server_tuple = (host,port)
         self.connect_server_tuple_list = []
         
-    def server(self,file_name,file_formate):
+    def server(self,file_name,file_format):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(self.server_tuple)
         s.listen(1)
         conn, addr = s.accept()
         
-        if file_formate == "wav":
+        if file_format == "wav":
             open_mode = 'wb'
         else:
             open_mode = 'w'
@@ -37,14 +37,14 @@ class p2p_obj:
                     f.write(l)
             s.close()
     
-    def client(self,file_name,file_formate):
+    def client(self,file_name,file_format):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.connect(self.server_tuple)
 
-        if(file_formate == "wav"):
-            with open(file_name+file_formate, 'rb') as f:
+        if(file_format == "wav"):
+            with open(file_name+file_format, 'rb') as f:
                 for l in f: s.sendall(l)
-        elif(file_formate == "csv"):
+        elif(file_format == "csv"):
             while True:
                 # open the .csv file and read its content
                 with open('music_database.csv', 'r') as f:
@@ -60,7 +60,7 @@ class p2p_obj:
         self.client("music_database","csv")
             
     def add_connect_server_tuple(self,new_server_host):
-        if len(connect_server_tuple_list) < 5:
+        if len(self.connect_server_tuple_list) < 5:
             self.connect_server_tuple_list.append((new_server_host,8000))
 
     def get_online_csv(self):

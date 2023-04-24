@@ -46,7 +46,7 @@ strData=str(buffer,'utf-8')
 data = StringIO(strData) 
 music_df = pd.read_csv(data)
 results = music_df
-print(results[results['lyrics'].str.contains("lonely", case=False)])
+print(results[results['lyrics'].str.contains("lonely", case=False)]['title'].to_string(index=False))
 
 
 # with open('output.csv','wb') as f:
