@@ -87,7 +87,7 @@ def select():
         selected_song_name = tree.item(selected_song)['values'][0]
         selected_song_path = database.get_filename(selected_song_name)
     except:
-        label.config(text = "Song not in database")
+        label.config(text = "Song not in local device")
         mixer.init()
         show_lyrics("")
         show_art("")
