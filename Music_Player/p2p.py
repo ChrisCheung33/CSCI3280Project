@@ -59,7 +59,7 @@ class p2p_obj:
         self.client("music_database","csv")
             
     def add_connect_server_tuple(self,new_server_host):
-        if len(connect_server_tuple_list) < 5:
+        if len(self.connect_server_tuple_list) < 5:
             self.connect_server_tuple_list.append((new_server_host,8000))
 
     def get_online_csv(self):
