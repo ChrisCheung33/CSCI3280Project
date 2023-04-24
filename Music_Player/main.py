@@ -296,7 +296,7 @@ def edit_song():
     # create a new window
     editWindow = tk.Toplevel()
     editWindow.title("Edit")
-    editWindow.geometry("400x600")
+    editWindow.geometry("400x410")
     editWindow.resizable(False, False)
     editWindow.configure(bg = COLOR[1])
     # create a frame
