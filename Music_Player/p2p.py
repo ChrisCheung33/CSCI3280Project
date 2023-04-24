@@ -38,14 +38,13 @@ class p2p_obj:
                 f.write(strData)
                 data = StringIO(strData) 
                 music_df = pd.read_csv(data)
-                results = music_df
-                print(results[results['lyrics'].str.contains("lonely", case=False)]['title'].to_string(index=False))
             else:
                 while True:
                     l = conn.recv(1024)
                     if not l: break
                     f.write(l)
         s.close()
+        return music_df
     
     def client(self,file_name,file_format):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -64,6 +63,6 @@ class p2p_obj:
         if len(self.connect_server_tuple_list) < 5:
             self.connect_server_tuple_list.append((new_server_host,8000))
 
-    def get_online_csv(self):
-        self.server("getdata", "csv")
+    def get_online_df(self):
+        return self.server("getdata", "csv")
     

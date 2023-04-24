@@ -21,6 +21,8 @@ from pygame import mixer
 from scipy.io import wavfile
 from pygame import mixer
 import wave
+import pandas as pd
+import p2p
 # import pyaudio
 
 host_name = socket.gethostname()
@@ -60,6 +62,8 @@ frame = 0 #show the number of frame, use for gif animation
 v_plt = None
 
 song_length = 0
+
+online_df = pd.DataFrame(columns=['filename', 'album', 'title', 'length', 'artist', 'lyrics', 'album_art'])
 
 #action for the play button: to select a song to be play
 def select():
@@ -384,26 +388,41 @@ def network_connection():
     ip_address_entry = tk.Entry(network_frame, width=30, bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
     ip_address_entry.grid(row=0, column=1, padx=5, pady=5)
 
-    def connect_to_target():
+    def serve_as_server():
         # read IP address of the local PC
         my_ip_address = socket.gethostbyname(socket.gethostname())
+        print("My IP Address: ", my_ip_address)
+
+        def server_thread():
+            reciever = p2p.p2p_obj('localhost',19123)
+            global online_df
+            online_df = reciever.get_online_df()
+            read_file_to_treeview(rootpath, patterns)
+    
+        server_thread = threading.Thread(target=server_thread)
+        server_thread.start()
+
+
+    def serve_as_client():
         # read target IP address
         target_ip_address = ip_address_entry.get()
-        # establish TCP connection to target PC
-        try:
-            target_port = 9610 # use the port number used by the server code
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((target_ip_address, target_port))
-            print("Connected to target PC at IP address:", target_ip_address)
-            # send data to target PC
-            # ...
-            s.close()
-        except socket.error as e:
-            print("Error connecting to target PC:", e)
+        print("Target IP Address: ", target_ip_address)
+
+        def client_thread():
+            sender = p2p.p2p_obj('localhost',19123)
+            sender.post_database()
+        
+        client_thread = threading.Thread(target=client_thread)
+        client_thread.start()
 
     # create a button for applying the network connection
-    apply_button = tk.Button(network_frame, text='Apply', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=connect_to_target)
+    apply_button = tk.Button(network_frame, text='Apply', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=serve_as_client)
     apply_button.grid(row = 4, column = 0, columnspan = 2, padx = 5, pady = 5)
+
+    # create a button for serving as server
+    serve_as_server_button = tk.Button(network_frame, text='Serve as Server', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=serve_as_server)
+    serve_as_server_button.grid(row = 5, column = 0, columnspan = 2, padx = 5, pady = 5)
+
 
 def save_changes(filename, title, artist, album, lyrics, editWindow):
     # get the selected song
@@ -718,6 +737,19 @@ def read_file_to_treeview(rootpath, patterns):
             album = "None"
         # get the time of the song
         time = database.get_length(filename)
+        # insert the song in the treeview
+        tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
+
+    # if pandas dataframe online_df is not empty
+    if not online_df.empty:
+        # get the name of the song
+        name = online_df['title'].iloc[0]
+        # get the artist of the song
+        artist = online_df['artist'].iloc[0]
+        # get the album of the song
+        album = online_df['album'].iloc[0]
+        # get the time of the song
+        time = online_df['length'].iloc[0]
         # insert the song in the treeview
         tree.insert("", "end", values = (name, artist, album, database.get_format_length(time)))
 
