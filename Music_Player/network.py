@@ -103,4 +103,4 @@ class Network:
                     print("Client: Could not send more data to ", ip)
                     break
 
-network = Network('192.168.1.42', 12345)
+network = Network('localhost', 12345)
