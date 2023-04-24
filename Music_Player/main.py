@@ -537,7 +537,7 @@ def show_visualize_music():
         selected_song = tree.focus()
         selected_song_name = tree.item(selected_song)['values'][0]
         music_length = database.get_length(database.get_filename(selected_song_name))
-        v_plt = music_visualization.create_visualize_music(rootpath+database.get_filename(selected_song_name),music_length = music_length,function = select())
+        v_plt = music_visualization.visualize_music(rootpath+database.get_filename(selected_song_name),music_length = music_length,function = select())
 
 def change_vol(_=None):
     if play_obj:

@@ -5,11 +5,10 @@ import simpleaudio as sa
 import wave
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+import threading
 
 # filename = "./music/ZenZenZense.wav"
-
-def create_visualize_music(filename,savepath = None, music_length = 0, function = None):
+def create_visualize_music(filename, music_length = 0):
     # Open the audio file using the wave.open() method
     wav_obj = wave.open(filename, 'rb')
 
@@ -22,20 +21,30 @@ def create_visualize_music(filename,savepath = None, music_length = 0, function 
     # Store the frame rate in a variable using the getframerate() function
     frame_rate = wav_obj.getframerate()
     
-    duration = len(audio_frames) / frame_rate * 4
+    duration = len(audio_frames) / frame_rate * 2
+    
+    print(audio_frames[frame_rate*5:frame_rate*5+frame_rate])
 
     # Create a list of frames for the animation
     frames = []
     fig = plt.figure()
     fig.set_facecolor('black')
-    for i in range(0, len(audio_frames), int(frame_rate/4)):
+    for i in range(0, len(audio_frames), int(frame_rate/2)):
         # Plot a segment of the audio signal
-        if i%frame_rate/frame_rate == 0:
-            segment = audio_frames[i:i+frame_rate]
-        else:
-            segment = audio_frames[i:i+frame_rate]*0.75
+        segment = audio_frames[i:i+frame_rate]
+        segment = np.abs(segment)
+        parts = np.array_split(segment, 40)
+
+        for i, part in enumerate(parts):
+            if i % 2 == 0:
+                mean_value = np.mean(part)
+                part[:] = mean_value
+            else:
+                part[:] = 0
+
         line, = plt.plot(segment)
-        plt.ylim([-frame_rate, frame_rate])
+        plt.axhline(y=0,color = "darkgrey" ,linestyle='-')
+        plt.ylim([0, 60000])
         frames.append([line])
 
     # Play Music For Testing
@@ -44,19 +53,13 @@ def create_visualize_music(filename,savepath = None, music_length = 0, function 
 
     # Create an animation from the frames
     plt.axis('off')
-    ani = animation.ArtistAnimation(fig, frames, interval=50, blit=True, repeat=False)
-    # music_length/duration/4
-    # def on_animation_complete():
-    #     plt.close()
-    
-    # ani.event_source.stop()
-    # ani.event_source = fig.canvas.new_timer(interval=(duration * 1000))
-    # ani.event_source.add_callback(on_animation_complete)
-    # ani.event_source.start()
-
-    # Uncomment the following line to save the animation as a video file
-    # ani.save(savepath)
+    ani = animation.ArtistAnimation(fig, frames, interval=music_length/duration*1000*0.65, blit=True, repeat=False)
     plt.show()
+    # return plt
+
+def visualize_music(filename,savepath = None, music_length = 0, function = None):
+    
+    plt = create_visualize_music(filename,music_length)
     if function != None:
         function()
     return plt
