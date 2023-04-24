@@ -28,43 +28,31 @@ class p2p_obj:
             open_mode = 'w'
         
         with open(file_name+"."+file_format,open_mode) as f:
-            buffer = b''
-            while True:
-                if(file_format == "csv"):
+            if(file_format == "csv"):
+                buffer = b''
+                while True:
                     data = conn.recv(1024)
-                    # f.write(data.decode('utf-8'))
                     if not data: break
                     buffer += data
-                    
-                else:
+                strData=str(buffer,'utf-8')
+                f.write(strData)
+                data = StringIO(strData) 
+                music_df = pd.read_csv(data)
+                results = music_df
+                print(results[results['lyrics'].str.contains("lonely", case=False)]['title'].to_string(index=False))
+            else:
+                while True:
                     l = conn.recv(1024)
                     if not l: break
                     f.write(l)
-            strData=str(buffer,'utf-8')
-            f.write(strData)
-            data = StringIO(strData) 
-            music_df = pd.read_csv(data)
-            results = music_df
-            print(results[results['lyrics'].str.contains("lonely", case=False)]['title'].to_string(index=False))
             s.close()
     
     def client(self,file_name,file_format):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.connect(self.server_tuple)
 
-        if(file_format == "wav"):
-            with open(file_name+file_format, 'rb') as f:
-                for l in f: s.sendall(l)
-        elif(file_format == "csv"):
-            # while True:
-            #     # open the .csv file and read its content
-            #     with open('music_database.csv', 'r') as f:
-            #         data = f.read()
-
-            #     # send the content of the .csv file to the client
-            #     s.sendall(data.encode('utf-8'))
-            with open('music_database.csv', 'rb') as f:
-                for l in f: s.sendall(l)
+        with open(file_name+"."+file_format, 'rb') as f:
+            for l in f: s.sendall(l)
 
         # close the connection with the client
         s.close()
