@@ -392,21 +392,26 @@ def network_connection():
     network_frame = tk.Frame(NetworkConnectionWindow, bg=COLOR[1])
     network_frame.pack(padx=15, pady=15, anchor='center')
 
+    # create a frame for the IP address input field
+    ip_address_frame = tk.Frame(network_frame, bg=COLOR[1])
+    ip_address_frame.grid(row=0, column=0, padx=5, pady=5)
+
     # create a label for the IP address input field
-    ip_address_label = tk.Label(network_frame, text="IP Address", bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
+    ip_address_label = tk.Label(ip_address_frame, text="IP Address", bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
     ip_address_label.grid(row=0, column=0, padx=5, pady=5)
 
     # create an entry for the IP address input field
-    ip_address_entry = tk.Entry(network_frame, width=30, bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
+    ip_address_entry = tk.Entry(ip_address_frame, width=30, bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
     ip_address_entry.grid(row=0, column=1, padx=5, pady=5)
 
     def serve_as_server():
         # read IP address of the local PC
-        my_ip_address = socket.gethostbyname(socket.gethostname())
+        # my_ip_address = socket.gethostbyname(socket.gethostname())
+        my_ip_address = server_address_entry.get()
         print("My IP Address: ", my_ip_address)
 
         def server_thread():
-            reciever = p2p.p2p_obj('localhost',19123)
+            reciever = p2p.p2p_obj(my_ip_address,19123)
             global online_df
             online_df = reciever.get_online_df()
             read_file_to_treeview(rootpath, patterns)
@@ -422,18 +427,30 @@ def network_connection():
         print("Target IP Address: ", target_ip_address)
 
         def client_thread():
-            sender = p2p.p2p_obj('localhost',19123)
+            sender = p2p.p2p_obj(target_ip_address,19123)
             sender.post_database()
         
         client_thread = threading.Thread(target=client_thread)
         client_thread.start()
 
     # create a button for applying the network connection
-    apply_button = tk.Button(network_frame, text='Apply', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=serve_as_client)
+    apply_button = tk.Button(ip_address_frame, text='Apply', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=serve_as_client)
     apply_button.grid(row = 4, column = 0, columnspan = 2, padx = 5, pady = 5)
 
+    # create a frame for the server address input field
+    server_address_frame = tk.Frame(network_frame, bg=COLOR[1])
+    server_address_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+    # create a label for the server address input field
+    server_address_label = tk.Label(server_address_frame, text="Server Address", bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
+    server_address_label.grid(row=1, column=0, padx=5, pady=5)
+
+    # create an entry for the server address input field
+    server_address_entry = tk.Entry(server_address_frame, width=30, bg=COLOR[1], fg=COLOR[3], font=("poppins", 14))
+    server_address_entry.grid(row=1, column=1, padx=5, pady=5)
+
     # create a button for serving as server
-    serve_as_server_button = tk.Button(network_frame, text='Serve as Server', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=serve_as_server)
+    serve_as_server_button = tk.Button(server_address_frame, text='Serve as Server', bg = COLOR[0], fg = COLOR[1], font=("poppins", 14), command=serve_as_server)
     serve_as_server_button.grid(row = 5, column = 0, columnspan = 2, padx = 5, pady = 5)
 
 

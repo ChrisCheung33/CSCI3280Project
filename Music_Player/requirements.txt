@@ -8,3 +8,4 @@ matplotlib
 scipy
 pygame
 tinytag
+eyed3
