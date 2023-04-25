@@ -31,7 +31,7 @@ print(host_ip)
 port = 9611
 
 # COLOR = ['#FFFBEB', '#495579', '#263159', '#251749']
-COLOR = ['#2C3639', '#3F4E4F', '#A27B5C', '#DCD7C9']
+COLOR = ['#2e3538', '#424e4f', '#9c7c60', '#DCD7Ca']
 
 TARGET_SIZE = (256, 256)
 TARGET_SIZE_SMALL = (50, 50)
